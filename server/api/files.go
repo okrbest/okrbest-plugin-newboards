@@ -6,7 +6,6 @@ package api
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -306,7 +305,7 @@ func (a *API) getFileInfo(w http.ResponseWriter, r *http.Request) {
 
 	// Validate that the file belongs to the specified board and team
 	if err := a.app.ValidateFileOwnership(teamID, boardID, filename); err != nil {
-		a.errorResponse(w, r, model.NewErrPermission(fmt.Sprintf("access denied to file, error: %s", err)))
+		a.errorResponse(w, r, model.NewErrPermission("access denied to file"))
 		return
 	}
 
