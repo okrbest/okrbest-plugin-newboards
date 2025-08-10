@@ -20,6 +20,7 @@ import {reducer as clientConfigReducer} from './clientConfig'
 import {reducer as sidebarReducer} from './sidebar'
 import {reducer as limitsReducer} from './limits'
 import {reducer as attachmentsReducer} from './attachments'
+import rhsReducer from './rhs'
 
 const store = configureStore({
     reducer: {
@@ -39,6 +40,7 @@ const store = configureStore({
         sidebar: sidebarReducer,
         limits: limitsReducer,
         attachments: attachmentsReducer,
+        rhs: rhsReducer,
     },
 })
 
