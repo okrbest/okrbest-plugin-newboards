@@ -118,6 +118,37 @@ const RHSBoardCards = (props: Props) => {
         window.open(boardUrl, '_blank', 'noopener')
     }
 
+    const handleCopyCardLink = (card: Card, e: React.MouseEvent) => {
+        e.stopPropagation() // 카드 클릭 이벤트 방지
+        
+        // viewId 결정: currentViewId가 없으면 해당 보드의 첫 번째 view 사용
+        const finalViewId = viewId || (currentBoardViews.length > 0 ? currentBoardViews[0].id : '')
+        
+        const params = {
+            teamId: currentTeamId,
+            boardId: board.id,
+            viewId: finalViewId,
+            cardId: card.id
+        }
+        
+        // Utils.getBoardPagePath를 사용해서 올바른 경로 생성
+        const cardPath = generatePath('/team/:teamId/:boardId?/:viewId?/:cardId?', params)
+        const windowAny = window as any
+        const cardUrl = `${window.location.origin}${windowAny.frontendBaseURL}${cardPath}`
+        
+        console.log('복사할 카드 URL:', cardUrl)
+        console.log('cardPath:', cardPath)
+        console.log('frontendBaseURL:', (window as any).frontendBaseURL)
+        
+        // 클립보드에 복사
+        navigator.clipboard.writeText(cardUrl).then(() => {
+            // 성공 메시지 (선택사항)
+            console.log('카드 링크가 복사되었습니다:', cardUrl)
+        }).catch((err) => {
+            console.error('링크 복사 실패:', err)
+        })
+    }
+
     // 인라인 스타일 정의
     const styles = {
         container: {
@@ -215,6 +246,20 @@ const RHSBoardCards = (props: Props) => {
             color: '#3f4350',
             marginRight: '8px',
         },
+        copyLinkButton: {
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '4px',
+            borderRadius: '2px',
+            color: '#6c757d',
+            fontSize: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minWidth: '20px',
+            height: '20px',
+        },
         cardMenuButton: {
             background: 'none',
             border: 'none',
@@ -288,6 +333,14 @@ const RHSBoardCards = (props: Props) => {
                                     <div className='card-title' style={styles.cardTitle}>
                                         {card.title || <FormattedMessage id='KanbanCard.untitled' defaultMessage='Untitled'/>}
                                     </div>
+                                    <button 
+                                        className='copy-link-button' 
+                                        style={styles.copyLinkButton}
+                                        onClick={(e) => handleCopyCardLink(card, e)}
+                                        title='카드 링크 복사'
+                                    >
+                                        <CompassIcon icon='link-variant'/>
+                                    </button>
                                 </div>
                                 <div className='card-assignee' style={styles.cardAssignee}>
                                     담당자: {card.fields.properties?.assignee || '미지정'}
