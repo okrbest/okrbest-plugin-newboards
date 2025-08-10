@@ -8,7 +8,7 @@ import mutator from '../mutator'
 import {Utils} from '../utils'
 import {getCurrentTeam} from '../store/teams'
 import {createBoard, Board} from '../blocks/board'
-import {useAppSelector} from '../store/hooks'
+import {useAppSelector, useAppDispatch} from '../store/hooks'
 import IconButton from '../widgets/buttons/iconButton'
 import OptionsIcon from '../widgets/icons/options'
 import Menu from '../widgets/menu'
@@ -20,6 +20,7 @@ import {Permission} from '../constants'
 
 import BoardPermissionGate from '../components/permissions/boardPermissionGate'
 import TelemetryClient, {TelemetryActions, TelemetryCategory} from '../telemetry/telemetryClient'
+import {showBoardCards} from '../store/rhs'
 
 import './rhsChannelBoardItem.scss'
 
@@ -32,6 +33,7 @@ type Props = {
 const RHSChannelBoardItem = (props: Props) => {
     const intl = useIntl()
     const board = props.board
+    const dispatch = useAppDispatch()
 
     const team = useAppSelector(getCurrentTeam)
     if (!team) {
@@ -42,9 +44,9 @@ const RHSChannelBoardItem = (props: Props) => {
         // send the telemetry information for the clicked board
         const extraData = {teamID: team.id, board: boardID}
         TelemetryClient.trackEvent(TelemetryCategory, TelemetryActions.ClickChannelsRHSBoard, extraData)
-
-        window.open(`${windowAny.frontendBaseURL}/team/${team.id}/${boardID}`, '_blank', 'noopener')
-    }
+        // 카드 목록을 보여주는 RHS로 변경
+        dispatch(showBoardCards(board))
+}
 
     const onUnlinkBoard = async (board: Board) => {
         const newBoard = createBoard(board)

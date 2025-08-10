@@ -33,6 +33,8 @@ import boardsScreenshots from '../../static/boards-screenshots.png'
 import {getMessages} from '../i18n'
 
 import RHSChannelBoardItem from './rhsChannelBoardItem'
+import RHSBoardCards from './rhsBoardCards'
+import {getCurrentRHSView, getSelectedBoard, showBoardsList} from '../store/rhs'
 
 
 import './rhsChannelBoards.scss'
@@ -45,6 +47,9 @@ const RHSChannelBoards = () => {
     const dispatch = useAppDispatch()
     const intl = useIntl()
     const [dataLoaded, setDataLoaded] = React.useState(false)
+    
+    const currentView = useAppSelector(getCurrentRHSView)
+    const selectedBoard = useAppSelector(getSelectedBoard)
 
     useEffect(() => {
         Promise.all([
@@ -87,6 +92,16 @@ const RHSChannelBoards = () => {
     }
     if (!dataLoaded) {
         return null
+    }
+
+    // 카드 목록 화면인 경우
+    if (currentView === 'cards' && selectedBoard) {
+        return (
+            <RHSBoardCards
+                board={selectedBoard}
+                onBackClick={() => dispatch(showBoardsList())}
+            />
+        )
     }
 
     const channelBoards = boards.filter((b) => b.channelId === currentChannel.id)
