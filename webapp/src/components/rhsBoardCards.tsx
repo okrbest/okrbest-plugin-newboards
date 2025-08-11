@@ -1,7 +1,7 @@
 // Copyright (c) 2020-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import React, {useMemo, useEffect} from 'react'
+import React, {useMemo, useEffect, useState} from 'react'
 import {FormattedMessage, useIntl} from 'react-intl'
 
 import {Board} from '../blocks/board'
@@ -16,6 +16,7 @@ import {loadBoardData} from '../store/initialLoad'
 import {getCurrentViewId, getViews} from '../store/views'
 import {getCurrentTeamId} from '../store/teams'
 import {generatePath} from 'react-router-dom'
+import Tooltip from '../widgets/tooltip'
 
 
 interface Props {
@@ -27,6 +28,8 @@ const RHSBoardCards = (props: Props) => {
     const {board, onBackClick} = props
     const intl = useIntl()
     const dispatch = useAppDispatch()
+    const [showCopyNotification, setShowCopyNotification] = useState(false)
+    const [fadeOut, setFadeOut] = useState(false)
 
     const untitledBoardTitle = intl.formatMessage({id: 'BoardComponent.untitled-board', defaultMessage: 'Untitled Board'})
 
@@ -136,18 +139,24 @@ const RHSBoardCards = (props: Props) => {
         const windowAny = window as any
         const cardUrl = `${window.location.origin}${windowAny.frontendBaseURL}${cardPath}`
         
-        console.log('복사할 카드 URL:', cardUrl)
-        console.log('cardPath:', cardPath)
-        console.log('frontendBaseURL:', (window as any).frontendBaseURL)
         
         // 클립보드에 복사
         navigator.clipboard.writeText(cardUrl).then(() => {
-            // 성공 메시지 (선택사항)
-            console.log('카드 링크가 복사되었습니다:', cardUrl)
+            // 성공 메시지 표시
+            setFadeOut(false)
+            setShowCopyNotification(true)
+            // 2.8초 후 페이드아웃 시작
+            setTimeout(() => {
+                setFadeOut(true)
+                // 0.2초 후 완전히 숨기기
+                setTimeout(() => setShowCopyNotification(false), 200)
+            }, 2800)
         }).catch((err) => {
             console.error('링크 복사 실패:', err)
         })
     }
+
+
 
     // 인라인 스타일 정의
     const styles = {
@@ -290,6 +299,36 @@ const RHSBoardCards = (props: Props) => {
 
     return (
         <div className='RHSBoardCards' style={styles.container}>
+            {/* 복사 성공 메시지 */}
+            {showCopyNotification && (
+                <div style={{
+                    position: 'fixed',
+                    bottom: '48px',
+                    left: '50%',
+                    marginLeft: '-160px',
+                    padding: '10px 20px',
+                    width: '320px',
+                    minHeight: '48px',
+                    color: 'rgba(var(--center-channel-bg-rgb), 1)',
+                    backgroundColor: 'rgba(var(--center-channel-color-rgb), 0.8)',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    verticalAlign: 'middle',
+                    borderRadius: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 999,
+                    visibility: fadeOut ? 'hidden' : 'visible',
+                    opacity: fadeOut ? 0 : 1,
+                    transition: fadeOut ? 'visibility 0s linear 200ms, opacity ease-in 200ms' : 'none',
+                }}>
+                    {intl.formatMessage({id: 'CardActionsMenu.copiedLink', defaultMessage: 'Copied!'})}
+                </div>
+            )}
+
+
+            
             <div className='rhs-board-cards-header' style={styles.header}>
                 <button 
                     className='back-button' 
@@ -320,17 +359,24 @@ const RHSBoardCards = (props: Props) => {
                 ) : boardCards.length > 0 ? (
                     <div className='cards-list' style={styles.cardsList}>
                         {boardCards.map((card) => (
-                            <div
+                            <Tooltip
                                 key={card.id}
-                                className='card-item'
-                                onClick={() => handleCardClicked(card)}
-                                style={styles.cardItem}
+                                title={intl.formatMessage({id: 'RHSBoardCards.goToCard', defaultMessage: 'Go to card'})}
                             >
+                                <div
+                                    className='card-item'
+                                    onClick={() => handleCardClicked(card)}
+                                    style={styles.cardItem}
+                                >
                                 <div className='card-title-row' style={styles.cardTitleRow}>
                                     <div className='card-icon' style={styles.cardIcon}>
                                         {card.fields.icon || '📋'}
                                     </div>
-                                    <div className='card-title' style={styles.cardTitle}>
+                                    <div 
+                                        className='card-title' 
+                                        style={styles.cardTitle}
+                                        title='카드로 이동'
+                                    >
                                         {card.title || <FormattedMessage id='KanbanCard.untitled' defaultMessage='Untitled'/>}
                                     </div>
                                     <button 
@@ -349,6 +395,7 @@ const RHSBoardCards = (props: Props) => {
                                     마지막 업데이트 시간: {Utils.displayDateTime(new Date(card.updateAt), intl)}
                                 </div>
                             </div>
+                            </Tooltip>
                         ))}
                     </div>
                 ) : (
