@@ -1,0 +1,168 @@
+.RHSBoardCards {
+    padding: 16px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background-color: rgb(var(--center-channel-bg-rgb));
+    border: 1px solid rgba(var(--center-channel-color-rgb), 0.16);
+    border-radius: 4px;
+    box-sizing: border-box;
+    overflow: hidden;
+    position: relative;
+    box-shadow: var(--elevation-1);
+
+    .rhs-board-cards-header {
+        display: flex;
+        align-items: center;
+        min-height: 40px;
+        border-bottom: 1px solid rgba(var(--center-channel-color-rgb), 0.16);
+        padding-bottom: 12px;
+        margin-bottom: 16px;
+        flex-shrink: 0;
+        position: sticky;
+        top: 0;
+        background-color: rgb(var(--center-channel-bg-rgb));
+        z-index: 100;
+
+        .back-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            margin-right: 8px;
+            border-radius: 4px;
+            color: rgb(var(--center-channel-color-rgb));
+            transition: background-color 0.2s ease;
+
+            &:hover {
+                background-color: rgba(var(--center-channel-color-rgb), 0.08);
+            }
+        }
+
+        .board-title {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+
+            &:hover {
+                background-color: rgba(var(--center-channel-color-rgb), 0.08);
+            }
+
+            .icon {
+                margin-right: 8px;
+                font-size: 16px;
+            }
+
+            .title {
+                font-size: 16px;
+                font-weight: 600;
+                color: rgb(var(--center-channel-color-rgb));
+            }
+        }
+    }
+
+    .cards-container {
+        position: absolute;
+        top: 88px;
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+        overflow: hidden;
+
+        .cards-list {
+            height: 100%;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-bottom: 24px;
+        }
+
+        .card-item {
+            padding: 12px;
+            border: 1px solid rgba(var(--center-channel-color-rgb), 0.16);
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: rgb(var(--center-channel-bg-rgb));
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            box-shadow: var(--elevation-1);
+
+            &:hover {
+                background-color: rgba(var(--center-channel-color-rgb), 0.04);
+                border-color: rgba(var(--center-channel-color-rgb), 0.24);
+                box-shadow: var(--elevation-2);
+            }
+
+            .card-title-row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 8px;
+
+                .card-icon {
+                    margin-right: 8px;
+                    font-size: 14px;
+                    color: rgb(var(--center-channel-color-rgb));
+                }
+
+                .card-title {
+                    flex-grow: 1;
+                    font-size: 14px;
+                    font-weight: 500;
+                    color: rgb(var(--center-channel-color-rgb));
+                    margin-right: 8px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+
+                .copy-link-button {
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    padding: 4px;
+                    border-radius: 2px;
+                    color: rgba(var(--center-channel-color-rgb), 0.64);
+                    font-size: 12px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-width: 20px;
+                    height: 20px;
+                    transition: all 0.2s ease;
+
+                    &:hover {
+                        background-color: rgba(var(--center-channel-color-rgb), 0.08);
+                        color: rgb(var(--center-channel-color-rgb));
+                    }
+                }
+            }
+
+            .card-assignee {
+                font-size: 12px;
+                color: rgba(var(--center-channel-color-rgb), 0.64);
+                margin-bottom: 4px;
+            }
+
+            .card-updated {
+                font-size: 12px;
+                color: rgba(var(--center-channel-color-rgb), 0.64);
+            }
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: rgba(var(--center-channel-color-rgb), 0.64);
+            font-size: 14px;
+        }
+    }
+} 
