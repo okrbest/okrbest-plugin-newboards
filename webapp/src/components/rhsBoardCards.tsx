@@ -18,6 +18,7 @@ import {getCurrentTeamId} from '../store/teams'
 import {generatePath} from 'react-router-dom'
 import Tooltip from '../widgets/tooltip'
 
+import './rhsBoardCards.scss'
 
 interface Props {
     board: Board
@@ -156,149 +157,9 @@ const RHSBoardCards = (props: Props) => {
         })
     }
 
-
-
-    // 인라인 스타일 정의
-    const styles = {
-        container: {
-            padding: '16px',
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column' as const,
-            backgroundColor: '#ffffff',
-            border: '1px solid #e1e5e9',
-            borderRadius: '4px',
-            boxSizing: 'border-box' as const,
-            overflow: 'hidden',
-            position: 'relative' as const,
-        },
-        header: {
-            display: 'flex',
-            alignItems: 'center',
-            minHeight: '40px',
-            borderBottom: '1px solid #e1e5e9',
-            paddingBottom: '12px',
-            marginBottom: '16px',
-            flexShrink: 0,
-            position: 'sticky' as const,
-            top: 0,
-            backgroundColor: '#ffffff',
-            zIndex: 1,
-        },
-        backButton: {
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: '8px',
-            marginRight: '8px',
-            borderRadius: '4px',
-            color: '#3f4350',
-        },
-        boardTitle: {
-            display: 'flex',
-            alignItems: 'center',
-            flexGrow: 1,
-            cursor: 'pointer',
-            padding: '8px',
-            borderRadius: '4px',
-        },
-        boardIcon: {
-            marginRight: '8px',
-            fontSize: '16px',
-        },
-        boardTitleText: {
-            fontSize: '16px',
-            fontWeight: 600,
-            color: '#3f4350',
-        },
-        cardsContainer: {
-            position: 'absolute' as const,
-            top: '88px', // 헤더 높이 + 패딩
-            left: '16px',
-            right: '16px',
-            bottom: '16px',
-            overflow: 'hidden',
-        },
-        cardsList: {
-            height: '100%',
-            overflowY: 'auto' as const,
-            display: 'flex',
-            flexDirection: 'column' as const,
-            gap: '12px',
-            paddingBottom: '24px', // 충분한 하단 여백
-        },
-        cardItem: {
-            padding: '12px',
-            border: '1px solid #e1e5e9',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            backgroundColor: '#ffffff',
-            transition: 'background-color 0.2s ease',
-            flexShrink: 0,
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-        },
-        cardTitleRow: {
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: '8px',
-        },
-        cardIcon: {
-            marginRight: '8px',
-            fontSize: '14px',
-            color: '#3f4350',
-        },
-        cardTitle: {
-            flexGrow: 1,
-            fontSize: '14px',
-            fontWeight: 500,
-            color: '#3f4350',
-            marginRight: '8px',
-        },
-        copyLinkButton: {
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: '4px',
-            borderRadius: '2px',
-            color: '#6c757d',
-            fontSize: '12px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minWidth: '20px',
-            height: '20px',
-        },
-        cardMenuButton: {
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: '4px',
-            borderRadius: '2px',
-            color: '#3f4350',
-        },
-        cardAssignee: {
-            fontSize: '12px',
-            color: '#6c757d',
-            marginBottom: '4px',
-        },
-        cardUpdated: {
-            fontSize: '12px',
-            color: '#6c757d',
-        },
-        emptyState: {
-            display: 'flex',
-            flexDirection: 'column' as const,
-            alignItems: 'center',
-            justifyContent: 'center',
-            height: '100%',
-            color: '#6c757d',
-            fontSize: '14px',
-        },
-    }
-
     return (
-        <div className='RHSBoardCards' style={styles.container}>
+        <div className='focalboard-body'>
+            <div className='RHSBoardCards'>
             {/* 복사 성공 메시지 */}
             {showCopyNotification && (
                 <div style={{
@@ -327,37 +188,33 @@ const RHSBoardCards = (props: Props) => {
                 </div>
             )}
 
-
-            
-            <div className='rhs-board-cards-header' style={styles.header}>
+            <div className='rhs-board-cards-header'>
                 <button 
                     className='back-button' 
                     onClick={onBackClick} 
                     data-testid='back-button'
-                    style={styles.backButton}
                 >
                     <CompassIcon icon='chevron-left'/>
                 </button>
                 <div 
                     className='board-title' 
                     onClick={handleBoardTitleClick}
-                    style={styles.boardTitle}
                 >
-                    {board.icon && <span className='icon' style={styles.boardIcon}>{board.icon}</span>}
-                    <span className='title' style={styles.boardTitleText}>{board.title || untitledBoardTitle}</span>
+                    {board.icon && <span className='icon'>{board.icon}</span>}
+                    <span className='title'>{board.title || untitledBoardTitle}</span>
                 </div>
             </div>
 
-            <div className='cards-container' style={styles.cardsContainer}>
+            <div className='cards-container'>
                 {isLoading ? (
-                    <div className='empty-state' style={styles.emptyState}>
+                    <div className='empty-state'>
                         <FormattedMessage 
                             id='RHSBoardCards.loading' 
                             defaultMessage='카드를 불러오는 중...'
                         />
                     </div>
                 ) : boardCards.length > 0 ? (
-                    <div className='cards-list' style={styles.cardsList}>
+                    <div className='cards-list'>
                         {boardCards.map((card) => (
                             <Tooltip
                                 key={card.id}
@@ -366,32 +223,29 @@ const RHSBoardCards = (props: Props) => {
                                 <div
                                     className='card-item'
                                     onClick={() => handleCardClicked(card)}
-                                    style={styles.cardItem}
                                 >
-                                <div className='card-title-row' style={styles.cardTitleRow}>
-                                    <div className='card-icon' style={styles.cardIcon}>
+                                <div className='card-title-row'>
+                                    <div className='card-icon'>
                                         {card.fields.icon || '📋'}
                                     </div>
                                     <div 
                                         className='card-title' 
-                                        style={styles.cardTitle}
                                         title='카드로 이동'
                                     >
                                         {card.title || <FormattedMessage id='KanbanCard.untitled' defaultMessage='Untitled'/>}
                                     </div>
                                     <button 
                                         className='copy-link-button' 
-                                        style={styles.copyLinkButton}
                                         onClick={(e) => handleCopyCardLink(card, e)}
                                         title='카드 링크 복사'
                                     >
                                         <CompassIcon icon='link-variant'/>
                                     </button>
                                 </div>
-                                <div className='card-assignee' style={styles.cardAssignee}>
+                                <div className='card-assignee'>
                                     담당자: {card.fields.properties?.assignee || '미지정'}
                                 </div>
-                                <div className='card-updated' style={styles.cardUpdated}>
+                                <div className='card-updated'>
                                     마지막 업데이트 시간: {Utils.displayDateTime(new Date(card.updateAt), intl)}
                                 </div>
                             </div>
@@ -399,7 +253,7 @@ const RHSBoardCards = (props: Props) => {
                         ))}
                     </div>
                 ) : (
-                    <div className='empty-state' style={styles.emptyState}>
+                    <div className='empty-state'>
                         <FormattedMessage 
                             id='RHSBoardCards.no-cards' 
                             defaultMessage='이 보드에는 카드가 없습니다.'
@@ -407,6 +261,7 @@ const RHSBoardCards = (props: Props) => {
                     </div>
                 )}
             </div>
+        </div>
         </div>
     )
 }
