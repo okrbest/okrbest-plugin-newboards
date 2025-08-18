@@ -7,9 +7,38 @@
     border: 1px solid rgba(var(--center-channel-color-rgb), 0.16);
     border-radius: 4px;
     box-sizing: border-box;
-    overflow: hidden;
+    overflow: visible;
     position: relative;
     box-shadow: var(--elevation-1);
+
+    .copy-notification {
+        position: fixed;
+        bottom: 48px;
+        left: 50%;
+        margin-left: -160px;
+        padding: 10px 20px;
+        width: 320px;
+        min-height: 48px;
+        color: rgba(var(--center-channel-bg-rgb), 1);
+        background-color: rgba(var(--center-channel-color-rgb), 0.8);
+        font-size: 16px;
+        font-weight: 600;
+        vertical-align: middle;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 999;
+        visibility: visible;
+        opacity: 1;
+        transition: none;
+
+        &.fade-out {
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s linear 200ms, opacity ease-in 200ms;
+        }
+    }
 
     .rhs-board-cards-header {
         display: flex;
@@ -22,7 +51,10 @@
         position: sticky;
         top: 0;
         background-color: rgb(var(--center-channel-bg-rgb));
-        z-index: 100;
+        z-index: 50;
+        overflow: visible;
+
+
 
         .back-button {
             background: none;
@@ -33,34 +65,43 @@
             border-radius: 4px;
             color: rgb(var(--center-channel-color-rgb));
             transition: background-color 0.2s ease;
+            position: relative;
 
             &:hover {
                 background-color: rgba(var(--center-channel-color-rgb), 0.08);
             }
         }
 
-        .board-title {
+        .board-title-wrapper {
             display: flex;
-            align-items: center;
             flex-grow: 1;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 4px;
-            transition: background-color 0.2s ease;
+            position: relative;
 
-            &:hover {
-                background-color: rgba(var(--center-channel-color-rgb), 0.08);
-            }
+            .board-title {
+                display: flex;
+                align-items: center;
+                width: 100%;
+                cursor: pointer;
+                padding: 8px;
+                border-radius: 4px;
+                transition: background-color 0.2s ease;
+                position: relative;
+                overflow: visible;
 
-            .icon {
-                margin-right: 8px;
-                font-size: 16px;
-            }
+                &:hover {
+                    background-color: rgba(var(--center-channel-color-rgb), 0.08);
+                }
 
-            .title {
-                font-size: 16px;
-                font-weight: 600;
-                color: rgb(var(--center-channel-color-rgb));
+                .icon {
+                    margin-right: 8px;
+                    font-size: 16px;
+                }
+
+                .title {
+                    font-size: 16px;
+                    font-weight: 600;
+                    color: rgb(var(--center-channel-color-rgb));
+                }
             }
         }
     }
@@ -71,7 +112,7 @@
         left: 16px;
         right: 16px;
         bottom: 16px;
-        overflow: hidden;
+        overflow: visible;
 
         .cards-list {
             height: 100%;
@@ -80,17 +121,21 @@
             flex-direction: column;
             gap: 12px;
             padding-bottom: 24px;
+            overflow-x: visible;
         }
 
         .card-item {
             padding: 12px;
             border: 1px solid rgba(var(--center-channel-color-rgb), 0.16);
             border-radius: 4px;
-            cursor: pointer;
             background-color: rgb(var(--center-channel-bg-rgb));
             transition: all 0.2s ease;
             flex-shrink: 0;
             box-shadow: var(--elevation-1);
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            width: 100%;
 
             &:hover {
                 background-color: rgba(var(--center-channel-color-rgb), 0.04);
@@ -98,60 +143,77 @@
                 box-shadow: var(--elevation-2);
             }
 
-            .card-title-row {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                margin-bottom: 8px;
+            .card-content {
+                flex: 1;
+                cursor: pointer;
+                margin-right: 8px;
+                width: 100%;
+                min-width: 0;
 
-                .card-icon {
-                    margin-right: 8px;
-                    font-size: 14px;
-                    color: rgb(var(--center-channel-color-rgb));
+                .card-content-inner {
+                    width: 100%;
+                    height: 100%;
                 }
 
-                .card-title {
-                    flex-grow: 1;
-                    font-size: 14px;
-                    font-weight: 500;
-                    color: rgb(var(--center-channel-color-rgb));
-                    margin-right: 8px;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                }
-
-                .copy-link-button {
-                    background: none;
-                    border: none;
-                    cursor: pointer;
-                    padding: 4px;
-                    border-radius: 2px;
-                    color: rgba(var(--center-channel-color-rgb), 0.64);
-                    font-size: 12px;
+                .card-title-row {
                     display: flex;
                     align-items: center;
-                    justify-content: center;
-                    min-width: 20px;
-                    height: 20px;
-                    transition: all 0.2s ease;
+                    margin-bottom: 8px;
+                    width: 100%;
 
-                    &:hover {
-                        background-color: rgba(var(--center-channel-color-rgb), 0.08);
+                    .card-icon {
+                        margin-right: 8px;
+                        font-size: 14px;
                         color: rgb(var(--center-channel-color-rgb));
+                        flex-shrink: 0;
                     }
+
+                    .card-title {
+                        flex: 1;
+                        font-size: 14px;
+                        font-weight: 500;
+                        color: rgb(var(--center-channel-color-rgb));
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                        min-width: 0;
+                    }
+                }
+
+                .card-assignee {
+                    display: block;
+                    font-size: 12px;
+                    color: rgba(var(--center-channel-color-rgb), 0.64);
+                    margin-bottom: 2px;
+                }
+
+                .card-updated {
+                    display: block;
+                    font-size: 12px;
+                    color: rgba(var(--center-channel-color-rgb), 0.64);
                 }
             }
 
-            .card-assignee {
-                font-size: 12px;
+            .copy-link-button {
+                background: none;
+                border: none;
+                cursor: pointer;
+                padding: 4px;
+                border-radius: 2px;
                 color: rgba(var(--center-channel-color-rgb), 0.64);
-                margin-bottom: 4px;
-            }
+                font-size: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 20px;
+                height: 20px;
+                transition: all 0.2s ease;
+                flex-shrink: 0;
 
-            .card-updated {
-                font-size: 12px;
-                color: rgba(var(--center-channel-color-rgb), 0.64);
+                &:hover {
+                    background-color: rgba(var(--center-channel-color-rgb), 0.08);
+                    color: rgb(var(--center-channel-color-rgb));
+                }
             }
         }
 

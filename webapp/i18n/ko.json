@@ -486,5 +486,13 @@
   "tutorial_tip.got_it": "알겠습니다",
   "tutorial_tip.ok": "다음",
   "tutorial_tip.out": "이 도움말을 선택 해제합니다.",
-  "tutorial_tip.seen": "전에 본적 있나요?"
+  "tutorial_tip.seen": "전에 본적 있나요?",
+  "RHSBoardCards.assignee": "담당자: {assignee}",
+  "RHSBoardCards.unassigned": "미지정",
+  "RHSBoardCards.lastUpdated": "마지막 업데이트 시간: {time}",
+  "RHSBoardCards.goToCard": "카드로 이동",
+  "RHSBoardCards.openBoard": "보드 열기",
+  "RHSBoardCards.copyCardLink": "카드 링크 복사",
+  "RHSBoardCards.loading": "카드를 불러오는 중...",
+  "RHSBoardCards.no-cards": "이 보드에는 카드가 없습니다."
 }
