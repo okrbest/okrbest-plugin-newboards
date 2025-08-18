@@ -73,20 +73,6 @@ const RHSBoardCards = (props: Props) => {
     // viewId 결정: currentViewId가 없으면 해당 보드의 첫 번째 view 사용
     const viewId = currentViewId || (currentBoardViews.length > 0 ? currentBoardViews[0].id : '')
 
-    // 디버깅을 위한 로그
-    console.log('RHSBoardCards URL Debug:', {
-        currentViewId,
-        viewId,
-        currentTeamId,
-        boardId: board.id,
-        allViewsCount: Object.keys(allViews).length,
-        currentBoardViewsCount: currentBoardViews.length,
-        currentBoardViews: currentBoardViews.map(v => ({ id: v.id, title: v.title })),
-        frontendBaseURL: (window as any).frontendBaseURL,
-        isLoading,
-        allCardsObjKeys: Object.keys(allCardsObj).length
-    })
-
     const handleCardClicked = (card: Card) => {
         TelemetryClient.trackEvent(TelemetryCategory, TelemetryActions.ViewCard, {board: board.id, card: card.id})
         
@@ -162,46 +148,33 @@ const RHSBoardCards = (props: Props) => {
             <div className='RHSBoardCards'>
             {/* 복사 성공 메시지 */}
             {showCopyNotification && (
-                <div style={{
-                    position: 'fixed',
-                    bottom: '48px',
-                    left: '50%',
-                    marginLeft: '-160px',
-                    padding: '10px 20px',
-                    width: '320px',
-                    minHeight: '48px',
-                    color: 'rgba(var(--center-channel-bg-rgb), 1)',
-                    backgroundColor: 'rgba(var(--center-channel-color-rgb), 0.8)',
-                    fontSize: '16px',
-                    fontWeight: '600',
-                    verticalAlign: 'middle',
-                    borderRadius: '4px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 999,
-                    visibility: fadeOut ? 'hidden' : 'visible',
-                    opacity: fadeOut ? 0 : 1,
-                    transition: fadeOut ? 'visibility 0s linear 200ms, opacity ease-in 200ms' : 'none',
-                }}>
+                <div className={`copy-notification ${fadeOut ? 'fade-out' : ''}`}>
                     {intl.formatMessage({id: 'CardActionsMenu.copiedLink', defaultMessage: 'Copied!'})}
                 </div>
             )}
 
             <div className='rhs-board-cards-header'>
                 <button 
-                    className='back-button' 
-                    onClick={onBackClick} 
-                    data-testid='back-button'
-                >
-                    <CompassIcon icon='chevron-left'/>
+                        className='back-button' 
+                        onClick={onBackClick} 
+                        data-testid='back-button'
+                    >
+                        <CompassIcon icon='chevron-left'/>
                 </button>
-                <div 
-                    className='board-title' 
-                    onClick={handleBoardTitleClick}
-                >
-                    {board.icon && <span className='icon'>{board.icon}</span>}
-                    <span className='title'>{board.title || untitledBoardTitle}</span>
+  
+                <div className='board-title-wrapper'>
+                    <Tooltip
+                        title={intl.formatMessage({id: 'RHSBoardCards.openBoard', defaultMessage: 'Open board'})}
+                        placement='bottom'
+                    >
+                        <div 
+                            className='board-title' 
+                            onClick={handleBoardTitleClick}
+                        >
+                            {board.icon && <span className='icon'>{board.icon}</span>}
+                            <span className='title'>{board.title || untitledBoardTitle}</span>
+                        </div>
+                    </Tooltip>
                 </div>
             </div>
 
@@ -216,40 +189,62 @@ const RHSBoardCards = (props: Props) => {
                 ) : boardCards.length > 0 ? (
                     <div className='cards-list'>
                         {boardCards.map((card) => (
-                            <Tooltip
+                            <div
                                 key={card.id}
-                                title={intl.formatMessage({id: 'RHSBoardCards.goToCard', defaultMessage: 'Go to card'})}
+                                className='card-item'
                             >
-                                <div
-                                    className='card-item'
+                                <div 
+                                    className='card-content'
                                     onClick={() => handleCardClicked(card)}
                                 >
-                                <div className='card-title-row'>
-                                    <div className='card-icon'>
-                                        {card.fields.icon || '📋'}
-                                    </div>
-                                    <div 
-                                        className='card-title' 
-                                        title='카드로 이동'
+                                    <Tooltip
+                                        title={intl.formatMessage({id: 'RHSBoardCards.goToCard', defaultMessage: 'Go to card'})}
+                                        placement='bottom'
                                     >
-                                        {card.title || <FormattedMessage id='KanbanCard.untitled' defaultMessage='Untitled'/>}
-                                    </div>
+                                        <div className='card-content-inner'>
+                                            <div className='card-title-row'>
+                                                <div className='card-icon'>
+                                                    {card.fields.icon || '📋'}
+                                                </div>
+                                                <div 
+                                                    className='card-title'
+                                                >
+                                                    {card.title || <FormattedMessage id='KanbanCard.untitled' defaultMessage='Untitled'/>}
+                                                </div>
+                                            </div>
+                                            <div className='card-assignee'>
+                                                <FormattedMessage 
+                                                    id='RHSBoardCards.assignee' 
+                                                    defaultMessage='담당자: {assignee}'
+                                                    values={{
+                                                        assignee: card.fields.properties?.assignee || intl.formatMessage({id: 'RHSBoardCards.unassigned', defaultMessage: '미지정'})
+                                                    }}
+                                                />
+                                            </div>
+                                            <div className='card-updated'>
+                                                <FormattedMessage 
+                                                    id='RHSBoardCards.lastUpdated' 
+                                                    defaultMessage='마지막 업데이트 시간: {time}'
+                                                    values={{
+                                                        time: Utils.displayDateTime(new Date(card.updateAt), intl)
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </Tooltip>
+                                </div>
+                                <Tooltip
+                                    title={intl.formatMessage({id: 'RHSBoardCards.copyCardLink', defaultMessage: 'Copy card link'})}
+                                    placement='left'
+                                >
                                     <button 
                                         className='copy-link-button' 
                                         onClick={(e) => handleCopyCardLink(card, e)}
-                                        title='카드 링크 복사'
                                     >
                                         <CompassIcon icon='link-variant'/>
                                     </button>
-                                </div>
-                                <div className='card-assignee'>
-                                    담당자: {card.fields.properties?.assignee || '미지정'}
-                                </div>
-                                <div className='card-updated'>
-                                    마지막 업데이트 시간: {Utils.displayDateTime(new Date(card.updateAt), intl)}
-                                </div>
+                                </Tooltip>
                             </div>
-                            </Tooltip>
                         ))}
                     </div>
                 ) : (
