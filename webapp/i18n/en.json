@@ -98,6 +98,12 @@
   "CardActionsMenu.copyLink": "Copy link",
   "CardActionsMenu.delete": "Delete",
   "CardActionsMenu.duplicate": "Duplicate",
+  "CardActionsMenu.sendNotification": "Send notification to channel",
+  "CardActionsMenu.notification-sent": "Notification sent!",
+  "CardActionsMenu.notification-failed": "Failed to send notification",
+  "app.board.link_message": "@%s linked the board [%s](%s) with this channel",
+  "app.board.unlink_message": "@%s unlinked the board [%s](%s) with this channel",
+  "app.board.card_notify_message": "@%s notified about card [%s](%s) in board [%s](%s)",
   "CardBadges.title-checkboxes": "Checkboxes",
   "CardBadges.title-comments": "Comments",
   "CardBadges.title-description": "This card has a description",
@@ -494,5 +500,8 @@
   "RHSBoardCards.openBoard": "Open board",
   "RHSBoardCards.copyCardLink": "Copy card link",
   "RHSBoardCards.loading": "Loading cards...",
-  "RHSBoardCards.no-cards": "No cards in this board."
+  "RHSBoardCards.no-cards": "No cards in this board.",
+  "BoardMessage.linkBoard": "@{username} linked the board [{boardTitle}]({boardLink}) with this channel",
+  "BoardMessage.unlinkBoard": "@{username} unlinked the board [{boardTitle}]({boardLink}) with this channel",
+  "BoardMessage.cardNotify": "@{username} notified about card [{cardTitle}]({cardLink}) in board [{boardTitle}]({boardLink})"
 }

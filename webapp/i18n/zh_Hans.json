@@ -447,5 +447,8 @@
   "tutorial_tip.got_it": "了解",
   "tutorial_tip.ok": "下一个",
   "tutorial_tip.out": "选择不使用这些提示。",
-  "tutorial_tip.seen": "之前有见到过吗？"
+  "tutorial_tip.seen": "之前有见到过吗？",
+  "BoardMessage.linkBoard": "@{username}将板块 [{boardTitle}]({boardLink})连接到此频道",
+  "BoardMessage.unlinkBoard": "@{username}将板块 [{boardTitle}]({boardLink})从此频道取消连接",
+  "BoardMessage.cardNotify": "@{username}通知了板块 [{boardTitle}]({boardLink})中的卡片 [{cardTitle}]({cardLink})"
 }

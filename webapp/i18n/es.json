@@ -224,5 +224,8 @@
   "ViewTitle.remove-icon": "Quitar Icono",
   "ViewTitle.show-description": "mostrar descripción",
   "ViewTitle.untitled-board": "Panel sin título",
-  "default-properties.title": "Título"
+  "default-properties.title": "Título",
+  "BoardMessage.linkBoard": "@{username} vinculó el tablero [{boardTitle}]({boardLink}) con este canal",
+  "BoardMessage.unlinkBoard": "@{username} desvinculó el tablero [{boardTitle}]({boardLink}) de este canal",
+  "BoardMessage.cardNotify": "@{username} notificó sobre la tarjeta [{cardTitle}]({cardLink}) en el tablero [{boardTitle}]({boardLink})"
 }

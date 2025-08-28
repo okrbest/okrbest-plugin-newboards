@@ -411,5 +411,8 @@
   "tutorial_tip.got_it": "J'ai compris",
   "tutorial_tip.ok": "Suivant",
   "tutorial_tip.out": "Désactiver les conseils.",
-  "tutorial_tip.seen": "Déjà vu ?"
+  "tutorial_tip.seen": "Déjà vu ?",
+  "BoardMessage.linkBoard": "@{username} a lié le tableau [{boardTitle}]({boardLink}) à ce canal",
+  "BoardMessage.unlinkBoard": "@{username} a dissocié le tableau [{boardTitle}]({boardLink}) de ce canal",
+  "BoardMessage.cardNotify": "@{username} a notifié à propos de la carte [{cardTitle}]({cardLink}) dans le tableau [{boardTitle}]({boardLink})"
 }

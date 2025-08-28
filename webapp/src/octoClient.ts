@@ -1089,6 +1089,16 @@ class OctoClient {
             headers: this.headers(),
         }))
     }
+
+    async sendBoardNotification(boardID: string, cardID: string): Promise<Response> {
+        const path = `/api/v2/boards/${boardID}/notify`
+        const body = JSON.stringify({cardID})
+        return fetch(this.getBaseURL() + path, {
+            method: 'POST',
+            headers: this.headers(),
+            body,
+        })
+    }
 }
 
 const octoClient = new OctoClient()
