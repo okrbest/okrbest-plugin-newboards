@@ -24,6 +24,7 @@ func (a *API) registerBoardsRoutes(r *mux.Router) {
 	r.HandleFunc("/boards/{boardID}/duplicate", a.sessionRequired(a.handleDuplicateBoard)).Methods("POST")
 	r.HandleFunc("/boards/{boardID}/undelete", a.sessionRequired(a.handleUndeleteBoard)).Methods("POST")
 	r.HandleFunc("/boards/{boardID}/metadata", a.sessionRequired(a.handleGetBoardMetadata)).Methods("GET")
+	r.HandleFunc("/boards/{boardID}/notify", a.sessionRequired(a.handleSendBoardNotification)).Methods("POST")
 }
 
 func (a *API) handleGetBoards(w http.ResponseWriter, r *http.Request) {
@@ -679,4 +680,33 @@ func (a *API) handleGetBoardMetadata(w http.ResponseWriter, r *http.Request) {
 	jsonBytesResponse(w, http.StatusOK, data)
 
 	auditRec.Success()
+}
+
+func (a *API) handleSendBoardNotification(w http.ResponseWriter, r *http.Request) {
+	userID := getUserID(r)
+	vars := mux.Vars(r)
+	boardID := vars["boardID"]
+
+	if !a.permissions.HasPermissionToBoard(userID, boardID, model.PermissionManageBoardCards) {
+		a.errorResponse(w, r, model.NewErrPermission("access denied to board"))
+		return
+	}
+
+	// 요청 본문에서 cardID 읽기
+	var requestBody struct {
+		CardID string `json:"cardID"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
+		a.errorResponse(w, r, model.NewErrBadRequest("invalid request body"))
+		return
+	}
+
+	// 실제 카드 정보로 알림 전송
+	err := a.app.SendCardNotification(boardID, userID, requestBody.CardID)
+	if err != nil {
+		a.errorResponse(w, r, err)
+		return
+	}
+
+	jsonStringResponse(w, http.StatusOK, "{}")
 }

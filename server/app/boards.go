@@ -20,6 +20,7 @@ var (
 
 const linkBoardMessage = "@%s linked the board [%s](%s) with this channel"
 const unlinkBoardMessage = "@%s unlinked the board [%s](%s) with this channel"
+const cardNotifyMessage = "@%s notified about card [%s](%s) in board [%s](%s)"
 
 var errNoDefaultCategoryFound = errors.New("no default category found for user")
 
@@ -413,6 +414,46 @@ func (a *App) postChannelMessage(message, channelID string) {
 	if err != nil {
 		a.logger.Error("Unable to post the link message to channel", mlog.Err(err))
 	}
+}
+
+func (a *App) SendCardNotification(boardID, userID, cardID string) error {
+	board, err := a.GetBoard(boardID)
+	if err != nil {
+		return err
+	}
+
+	if board.ChannelID == "" {
+		return fmt.Errorf("board is not linked to any channel")
+	}
+
+	// 카드 정보 가져오기
+	card, err := a.GetBlockByID(cardID)
+	if err != nil {
+		return err
+	}
+
+	user, err := a.store.GetUserByID(userID)
+	if err != nil {
+		return err
+	}
+
+	boardLink := utils.MakeBoardLink(a.config.ServerRoot, board.TeamID, board.ID)
+	cardLink := utils.MakeCardLink(a.config.ServerRoot, board.TeamID, board.ID, cardID)
+	title := board.Title
+	if title == "" {
+		title = "Untitled board"
+	}
+
+	cardTitle := card.Title
+	if cardTitle == "" {
+		cardTitle = "Untitled card"
+	}
+
+	// 기존 방식과 동일하게 메시지 전송
+	message := fmt.Sprintf(cardNotifyMessage, user.Username, cardTitle, cardLink, title, boardLink)
+	a.postChannelMessage(message, board.ChannelID)
+	
+	return nil
 }
 
 // broadcastTeamUsers notifies the members of a team when a template changes its type

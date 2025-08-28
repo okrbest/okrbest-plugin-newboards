@@ -447,5 +447,8 @@
   "tutorial_tip.got_it": "了解",
   "tutorial_tip.ok": "下一步",
   "tutorial_tip.out": "不接受這個提示.",
-  "tutorial_tip.seen": "以前有見過嗎?"
+  "tutorial_tip.seen": "以前有見過嗎?",
+  "BoardMessage.linkBoard": "@{username}將看板 [{boardTitle}]({boardLink})連接到此頻道",
+  "BoardMessage.unlinkBoard": "@{username}將看板 [{boardTitle}]({boardLink})從此頻道解除連接",
+  "BoardMessage.cardNotify": "@{username}通知了看板 [{boardTitle}]({boardLink})中的卡片 [{cardTitle}]({cardLink})"
 }

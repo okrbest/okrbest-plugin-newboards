@@ -10,6 +10,7 @@ import Menu from '../../widgets/menu'
 import BoardPermissionGate from '../permissions/boardPermissionGate'
 import DuplicateIcon from '../../widgets/icons/duplicate'
 import LinkIcon from '../../widgets/icons/Link'
+import MessageIcon from '../../widgets/icons/message'
 import {Utils} from '../../utils'
 import {Permission} from '../../constants'
 import {sendFlashMessage} from '../flashMessages'
@@ -17,6 +18,7 @@ import {IUser} from '../../user'
 import {getMe} from '../../store/users'
 import {useAppSelector} from '../../store/hooks'
 import TelemetryClient, {TelemetryActions, TelemetryCategory} from '../../telemetry/telemetryClient'
+import octoClient from '../../octoClient'
 
 type Props = {
     cardId: string
@@ -41,6 +43,19 @@ export const CardActionsMenu = (props: Props): JSX.Element => {
         if (props.onClickDuplicate) {
             TelemetryClient.trackEvent(TelemetryCategory, TelemetryActions.DuplicateCard, {board: props.boardId, card: props.cardId})
             props.onClickDuplicate()
+        }
+    }
+
+    const handleSendNotification = async () => {
+        try {
+            const response = await octoClient.sendBoardNotification(props.boardId, props.cardId)
+            if (response.ok) {
+                sendFlashMessage({content: intl.formatMessage({id: 'CardActionsMenu.notification-sent', defaultMessage: 'Notification sent!'}), severity: 'high'})
+            } else {
+                sendFlashMessage({content: intl.formatMessage({id: 'CardActionsMenu.notification-failed', defaultMessage: 'Failed to send notification'}), severity: 'high'})
+            }
+        } catch (error) {
+            sendFlashMessage({content: intl.formatMessage({id: 'CardActionsMenu.notification-failed', defaultMessage: 'Failed to send notification'}), severity: 'high'})
         }
     }
 
@@ -78,6 +93,14 @@ export const CardActionsMenu = (props: Props): JSX.Element => {
                     }}
                 />
             }
+            <BoardPermissionGate permissions={[Permission.ManageBoardCards]}>
+                <Menu.Text
+                    icon={<MessageIcon/>}
+                    id='sendNotification'
+                    name={intl.formatMessage({id: 'CardActionsMenu.sendNotification', defaultMessage: 'Send notification to channel'})}
+                    onClick={handleSendNotification}
+                />
+            </BoardPermissionGate>
             {props.children}
         </Menu>
     )

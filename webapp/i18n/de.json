@@ -458,5 +458,8 @@
   "tutorial_tip.got_it": "Alles klar",
   "tutorial_tip.ok": "Weiter",
   "tutorial_tip.out": "Diese Tipps nicht mehr anzeigen.",
-  "tutorial_tip.seen": "Schon mal gesehen?"
+  "tutorial_tip.seen": "Schon mal gesehen?",
+  "BoardMessage.linkBoard": "@{username} hat das Board [{boardTitle}]({boardLink}) mit diesem Kanal verknüpft",
+  "BoardMessage.unlinkBoard": "@{username} hat die Verknüpfung des Boards [{boardTitle}]({boardLink}) mit diesem Kanal aufgehoben",
+  "BoardMessage.cardNotify": "@{username} hat über die Karte [{cardTitle}]({cardLink}) im Board [{boardTitle}]({boardLink}) benachrichtigt"
 }

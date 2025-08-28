@@ -447,5 +447,8 @@
   "tutorial_tip.got_it": "了解",
   "tutorial_tip.ok": "次へ",
   "tutorial_tip.out": "これらのコツを表示しません。",
-  "tutorial_tip.seen": "以前に見たことがありますか?"
+  "tutorial_tip.seen": "以前に見たことがありますか?",
+  "BoardMessage.linkBoard": "@{username}がボード [{boardTitle}]({boardLink})をこのチャンネルにリンクしました",
+  "BoardMessage.unlinkBoard": "@{username}がボード [{boardTitle}]({boardLink})をこのチャンネルからリンク解除しました",
+  "BoardMessage.cardNotify": "@{username}がボード [{boardTitle}]({boardLink})のカード [{cardTitle}]({cardLink})について通知しました"
 }
