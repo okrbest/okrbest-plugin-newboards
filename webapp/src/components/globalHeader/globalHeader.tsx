@@ -33,14 +33,14 @@ const HeaderItems = (props: HeaderItemProps) => {
         >
             <div className='GlobalHeaderComponent'>
                 <span className='spacer'/>
-                <a
+                {/* <a
                     href={helpUrl}
                     target='_blank'
                     rel='noreferrer'
                     className='GlobalHeaderComponent__button help-button'
                 >
                     <HelpIcon/>
-                </a>
+                </a> */}
                 <GlobalHeaderSettingsMenu history={props.history}/>
             </div>
         </IntlProvider>
