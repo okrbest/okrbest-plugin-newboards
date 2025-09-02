@@ -37,7 +37,7 @@ const SidebarCategoriesTourStep = (): JSX.Element | null => {
                 defaultMessage='All your boards are now organized under your new sidebar. No more switching between workspaces. One-time custom categories based on your prior workspaces may have automatically been created for you as part of your v7.2 upgrade. These can be removed or edited to your preference. '
             />
             <a
-                href='https://docs.mattermost.com/welcome/whats-new-in-v72.html'
+                href='https://docs.okrbest.com/welcome/whats-new-in-v72.html'
                 target='_blank'
                 rel='noopener noreferrer'
             >
