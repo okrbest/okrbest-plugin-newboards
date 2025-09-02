@@ -18,7 +18,7 @@ const TopBar = (): JSX.Element => {
             <div
                 className='TopBar'
             >
-                <a
+                {/* <a
                     className='link'
                     href={feedbackUrl}
                     target='_blank'
@@ -36,7 +36,7 @@ const TopBar = (): JSX.Element => {
                     >
                         {`v${Constants.versionString}`}
                     </div>
-                </div>
+                </div> */}
             </div>
         )
     }
@@ -46,7 +46,7 @@ const TopBar = (): JSX.Element => {
         <div
             className='TopBar'
         >
-            <a
+            {/* <a
                 className='link'
                 href={focalboardFeedbackUrl}
                 target='_blank'
@@ -63,7 +63,7 @@ const TopBar = (): JSX.Element => {
                 rel='noreferrer'
             >
                 <HelpIcon/>
-            </a>
+            </a> */}
         </div>
     )
 }
