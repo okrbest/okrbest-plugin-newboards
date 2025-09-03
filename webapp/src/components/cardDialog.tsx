@@ -237,6 +237,19 @@ const CardDialog = (props: Props): JSX.Element => {
         )
     }
 
+    const handleSendNotification = async () => {
+        try {
+            const response = await octoClient.sendBoardNotification(props.board.id, props.cardId)
+            if (response.ok) {
+                sendFlashMessage({content: intl.formatMessage({id: 'CardDialog.notification-sent', defaultMessage: '채널에 게시되었습니다!'}), severity: 'high'})
+            } else {
+                sendFlashMessage({content: intl.formatMessage({id: 'CardDialog.notification-failed', defaultMessage: '채널 게시에 실패했습니다'}), severity: 'high'})
+            }
+        } catch (error) {
+            sendFlashMessage({content: intl.formatMessage({id: 'CardDialog.notification-failed', defaultMessage: '채널 게시에 실패했습니다'}), severity: 'high'})
+        }
+    }
+
     const followActionButton = (following: boolean): React.ReactNode => {
         const followBtn = (
             <>
@@ -264,10 +277,23 @@ const CardDialog = (props: Props): JSX.Element => {
             </>
         )
 
+        const channelPublishBtn = (
+            <BoardPermissionGate permissions={[Permission.ManageBoardCards]}>
+                <Button
+                    className='cardFollowBtn cardFollowBtn--channel-publish'
+                    emphasis='gray'
+                    size='medium'
+                    onClick={handleSendNotification}
+                >
+                    {intl.formatMessage({id: 'CardDetail.ChannelPublish', defaultMessage: '채널 게시'})}
+                </Button>
+            </BoardPermissionGate>
+        )
+
         if (!isTemplate && Utils.isFocalboardPlugin() && !card?.limited) {
-            return (<>{attachBtn()}{following ? unfollowBtn : followBtn}</>)
+            return (<>{attachBtn()}{channelPublishBtn}{following ? unfollowBtn : followBtn}</>)
         }
-        return (<>{attachBtn()}</>)
+        return (<>{attachBtn()}{channelPublishBtn}</>)
     }
 
     const followingCards = useAppSelector(getUserBlockSubscriptionList)
