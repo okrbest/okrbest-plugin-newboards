@@ -45,8 +45,10 @@ import AttachmentList from './attachment'
 
 import './cardDetail.scss'
 
-export const OnboardingBoardTitle = 'Welcome to Boards!'
-export const OnboardingCardTitle = 'Create a new card'
+// export const OnboardingBoardTitle = 'Welcome to Boards!'
+export const OnboardingBoardTitle = 'Boards에 오신 것을 환영합니다!'
+// export const OnboardingCardTitle = 'Create a new card'
+export const OnboardingCardTitle = '새 카드 만들기'
 
 type Props = {
     board: Board
