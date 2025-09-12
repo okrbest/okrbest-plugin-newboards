@@ -25,7 +25,8 @@ export const SidebarTourSteps: {[key: string]: number} = {
 
 export const FINISHED = 999
 
-export const TOUR_BASE = 'onboarding'
+// export const TOUR_BASE = 'onboarding'
+export const TOUR_BASE = '1. 온보딩'
 export const TOUR_CARD = 'card'
 export const TOUR_BOARD = 'board'
 export const TOUR_SIDEBAR = 'sidebar'

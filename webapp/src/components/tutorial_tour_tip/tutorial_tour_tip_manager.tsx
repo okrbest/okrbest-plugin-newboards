@@ -170,7 +170,9 @@ const useTutorialTourTipManager = ({
             trackEvent(TelemetryCategory, tag)
         }
         if (getLastStep() === currentStep) {
-            handleSavePreferences(FINISHED)
+            // handleSavePreferences(FINISHED)
+            // 현재 투어의 마지막 단계라면 다음 투어 카테고리로 전환
+            handleSendToNextTour(tutorialCategory)
         } else {
             handleSavePreferences(true)
         }

@@ -25,7 +25,7 @@ func TestPrepareOnboardingTour(t *testing.T) {
 		userID := "user_id_1"
 		welcomeBoard := model.Board{
 			ID:         "board_id_1",
-			Title:      "Welcome to Boards!",
+			Title:      "Boards에 오신 것을 환영합니다!",
 			TeamID:     "0",
 			IsTemplate: true,
 		}
@@ -34,7 +34,7 @@ func TestPrepareOnboardingTour(t *testing.T) {
 		th.Store.EXPECT().DuplicateBoard(welcomeBoard.ID, userID, teamID, false).Return(&model.BoardsAndBlocks{Boards: []*model.Board{
 			{
 				ID:         "board_id_2",
-				Title:      "Welcome to Boards!",
+				Title:      "Boards에 오신 것을 환영합니다!",
 				TeamID:     "0",
 				IsTemplate: true,
 			},
@@ -48,7 +48,7 @@ func TestPrepareOnboardingTour(t *testing.T) {
 
 		privateWelcomeBoard := model.Board{
 			ID:         "board_id_1",
-			Title:      "Welcome to Boards!",
+			Title:      "Boards에 오신 것을 환영합니다!",
 			TeamID:     "0",
 			IsTemplate: true,
 			Type:       model.BoardTypePrivate,
@@ -99,7 +99,7 @@ func TestCreateWelcomeBoard(t *testing.T) {
 		userID := "user_id_1"
 		welcomeBoard := model.Board{
 			ID:         "board_id_1",
-			Title:      "Welcome to Boards!",
+			Title:      "Boards에 오신 것을 환영합니다!",
 			TeamID:     "0",
 			IsTemplate: true,
 		}
@@ -112,7 +112,7 @@ func TestCreateWelcomeBoard(t *testing.T) {
 
 		privateWelcomeBoard := model.Board{
 			ID:         "board_id_1",
-			Title:      "Welcome to Boards!",
+			Title:      "Boards에 오신 것을 환영합니다!",
 			TeamID:     "0",
 			IsTemplate: true,
 			Type:       model.BoardTypePrivate,
@@ -161,7 +161,7 @@ func TestGetOnboardingBoardID(t *testing.T) {
 	t.Run("base case", func(t *testing.T) {
 		welcomeBoard := model.Board{
 			ID:         "board_id_1",
-			Title:      "Welcome to Boards!",
+			Title:      "Boards에 오신 것을 환영합니다!",
 			TeamID:     "0",
 			IsTemplate: true,
 		}

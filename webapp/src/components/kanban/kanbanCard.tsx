@@ -87,7 +87,8 @@ const KanbanCard = (props: Props) => {
         }
     }, [props.onClick, card])
 
-    const isOnboardingCard = card.title === 'Create a new card'
+    // const isOnboardingCard = card.title === 'Create a new card'
+    const isOnboardingCard = card.title === '새 카드 만들기'
     const showOnboarding = isOnboardingCard && !match.params.cardId && !board.isTemplate && Utils.isFocalboardPlugin()
     let emojiData = null
     if (card.fields.icon) {
