@@ -91,6 +91,15 @@ const PersonSelector = (props: Props): JSX.Element => {
             profileImg = imageURLForUser(user.id)
         }
 
+        // 사용자 표시 이름을 id-이름(별명) 형식으로 포맷팅
+        const getFormattedDisplayName = (user: any): string => {
+            if (user.firstname || user.lastname || user.nickname) {
+                const fullName = Utils.getFullName(user);
+                return `${user.username} - ${fullName} ${user.nickname ? `(${user.nickname})` : ''}`.trim();
+            }
+            return user.username;
+        };
+
         return (
             <div
                 key={user.id}
@@ -102,7 +111,7 @@ const PersonSelector = (props: Props): JSX.Element => {
                         src={profileImg}
                     />
                 )}
-                {Utils.getUserDisplayName(user, clientConfig.teammateNameDisplay)}
+                {getFormattedDisplayName(user)}
                 <GuestBadge show={Boolean(user?.is_guest)}/>
             </div>
         )
@@ -195,7 +204,13 @@ const PersonSelector = (props: Props): JSX.Element => {
                 formatOptionLabel={formatOptionLabel}
                 styles={selectStyles}
                 placeholder={emptyDisplayValue}
-                getOptionLabel={(o: IUser) => o.username}
+                getOptionLabel={(o: IUser) => {
+                    if (o.firstname || o.lastname || o.nickname) {
+                        const fullName = Utils.getFullName(o);
+                        return `${o.username} - ${fullName} ${o.nickname ? `(${o.nickname})` : ''}`.trim();
+                    }
+                    return o.username;
+                }}
                 getOptionValue={(a: IUser) => a.id}
                 value={users}
                 onChange={onChange}
