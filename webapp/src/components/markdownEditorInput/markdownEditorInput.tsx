@@ -95,15 +95,26 @@ const MarkdownEditorInput = (props: Props): ReactElement => {
         }
 
         const mentions: MentionUser[] = users.map(
-            (user: IUser): MentionUser => ({
-                name: user.username,
-                avatar: `${imageURLForUser ? imageURLForUser(user.id) : ''}`,
-                is_bot: user.is_bot,
-                is_guest: user.is_guest,
-                displayName: Utils.getUserDisplayName(user, clientConfig.teammateNameDisplay),
-                isBoardMember: Boolean(boardUsers.find((u) => u.id === user.id)),
-                user,
-            }))
+            (user: IUser): MentionUser => {
+                // 사용자 표시 이름을 id-이름(별명) 형식으로 포맷팅
+                const getFormattedDisplayName = (user: IUser): string => {
+                    if (user.firstname || user.lastname || user.nickname) {
+                        const fullName = Utils.getFullName(user);
+                        return `${user.username} - ${fullName} ${user.nickname ? `(${user.nickname})` : ''}`.trim();
+                    }
+                    return user.username;
+                };
+
+                return {
+                    name: user.username,
+                    avatar: `${imageURLForUser ? imageURLForUser(user.id) : ''}`,
+                    is_bot: user.is_bot,
+                    is_guest: user.is_guest,
+                    displayName: getFormattedDisplayName(user),
+                    isBoardMember: Boolean(boardUsers.find((u) => u.id === user.id)),
+                    user,
+                };
+            })
         setSuggestions(mentions)
     }
 
