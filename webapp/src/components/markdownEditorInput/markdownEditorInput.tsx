@@ -71,12 +71,16 @@ const MarkdownEditorInput = (props: Props): ReactElement => {
     const me = useAppSelector<IUser|null>(getMe)
 
     const [suggestions, setSuggestions] = useState<MentionUser[]>([])
+    const [isComposing, setIsComposing] = useState(false)
+    const [manualMentionMode, setManualMentionMode] = useState(false)
+    const [mentionSearchTerm, setMentionSearchTerm] = useState('')
 
     const loadSuggestions = async (term: string) => {
         let users: IUser[]
 
         if (!me?.is_guest && (allowManageBoardRoles || (board && board.type === BoardTypeOpen))) {
             const excludeBots = true
+            // Use original search method
             users = await octoClient.searchTeamUsers(term, excludeBots)
         } else {
             users = boardUsers.
@@ -118,13 +122,54 @@ const MarkdownEditorInput = (props: Props): ReactElement => {
         setSuggestions(mentions)
     }
 
-    const debouncedLoadSuggestion = useMemo(() => debounce(loadSuggestions, 200), [])
+    // Reduce debounce time from 200ms to 100ms for faster response like channels
+    const debouncedLoadSuggestion = useMemo(() => debounce(loadSuggestions, 100), [])
 
     useEffect(() => {
         // Get the ball rolling. Searching for empty string
         // returns first 10 users in alphabetical order.
         loadSuggestions('')
     }, [])
+
+    // Add DOM input event listener for better Korean detection
+    useEffect(() => {
+        const handleDOMInput = (e: Event) => {
+            setTimeout(() => {
+                if (ref.current) {
+                    const editorState = ref.current.getEditorState()
+                    const contentState = editorState.getCurrentContent()
+                    const selection = editorState.getSelection()
+                    const currentBlock = contentState.getBlockForKey(selection.getStartKey())
+                    const text = currentBlock.getText()
+                    const cursorPosition = selection.getStartOffset()
+                    
+                    const textBeforeCursor = text.substring(0, cursorPosition)
+                    const mentionMatch = textBeforeCursor.match(/@([^\s]*)$/)
+                    
+                    if (mentionMatch) {
+                        const searchTerm = mentionMatch[1]
+                        const hasKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(searchTerm)
+                        
+                        if (hasKorean && searchTerm.length > 0) {
+                            setManualMentionMode(true)
+                            setMentionSearchTerm(searchTerm)
+                            setIsMentionPopoverOpen(true)
+                            loadSuggestions(searchTerm)
+                        }
+                    }
+                }
+            }, 0)
+        }
+
+        // Add event listener to the editor container
+        const editorElement = ref.current?.editor?.editor
+        if (editorElement) {
+            editorElement.addEventListener('input', handleDOMInput, true)
+            return () => {
+                editorElement.removeEventListener('input', handleDOMInput, true)
+            }
+        }
+    }, [loadSuggestions])
 
     const generateEditorState = (text?: string) => {
         const state = EditorState.createWithContent(ContentState.createFromText(text || ''))
@@ -178,7 +223,13 @@ const MarkdownEditorInput = (props: Props): ReactElement => {
     const [isEmojiPopoverOpen, setIsEmojiPopoverOpen] = useState(false)
 
     const {MentionSuggestions, plugins, EmojiSuggestions} = useMemo(() => {
-        const mentionPlugin = createMentionPlugin({mentionPrefix: '@'})
+        // Create mention plugin with custom regex that properly handles Korean
+        const mentionPlugin = createMentionPlugin({
+            mentionPrefix: '@',
+            // Custom regex to include Korean characters properly
+            mentionRegExp: '[\\w\\-\xC0-\xD6\xD8-\xF6\xF8-\xFF\u0100-\u0148\u014A-\u017F\u0410-\u044F\uAC00-\uD7AF\u1100-\u11FF\u3130-\u318F]',
+            supportWhitespace: false
+        })
         const emojiPlugin = createEmojiPlugin()
         const markdownPlugin = createLiveMarkdownPlugin()
 
@@ -196,12 +247,47 @@ const MarkdownEditorInput = (props: Props): ReactElement => {
     }, [])
 
     const onEditorStateChange = useCallback((newEditorState: EditorState) => {
-        // newEditorState.
         const newText = newEditorState.getCurrentContent().getPlainText()
-
         onChange && onChange(newText)
         setEditorState(newEditorState)
-    }, [onChange])
+
+        // ALWAYS check for mentions, regardless of composition state
+        const selection = newEditorState.getSelection()
+        const contentState = newEditorState.getCurrentContent()
+        const currentBlock = contentState.getBlockForKey(selection.getStartKey())
+        const text = currentBlock.getText()
+        const cursorPosition = selection.getStartOffset()
+        
+        // Look for @ mentions before cursor
+        const textBeforeCursor = text.substring(0, cursorPosition)
+        const mentionMatch = textBeforeCursor.match(/@([^\s]*)$/)
+        
+        if (mentionMatch) {
+            const searchTerm = mentionMatch[1]
+            const hasKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(searchTerm)
+            
+            if (searchTerm.length > 0) {
+                // For Korean, bypass the plugin and handle manually
+                if (hasKorean) {
+                    setManualMentionMode(true)
+                    setMentionSearchTerm(searchTerm)
+                    setIsMentionPopoverOpen(true)
+                }
+                
+                // Force trigger mention for all cases
+                setTimeout(() => {
+                    loadSuggestions(searchTerm)
+                }, 0)
+            }
+        } else {
+            // No mention found, close manual mode
+            if (manualMentionMode) {
+                setManualMentionMode(false)
+                setMentionSearchTerm('')
+                setIsMentionPopoverOpen(false)
+            }
+        }
+    }, [onChange, isComposing, loadSuggestions, manualMentionMode])
 
     const customKeyBindingFn = useCallback((e: React.KeyboardEvent) => {
         if (isMentionPopoverOpen || isEmojiPopoverOpen) {
@@ -277,9 +363,85 @@ const MarkdownEditorInput = (props: Props): ReactElement => {
         setIsEmojiPopoverOpen(false)
     }, [])
 
+    // IME handling for Korean input
+    const handleCompositionStart = useCallback(() => {
+        setIsComposing(true)
+    }, [])
+
+    const handleCompositionUpdate = useCallback((e: React.CompositionEvent) => {
+        // During Korean composition, get the current input data
+        if (e.data && ref.current) {
+            const editorState = ref.current.getEditorState()
+            const contentState = editorState.getCurrentContent()
+            const selection = editorState.getSelection()
+            const currentBlock = contentState.getBlockForKey(selection.getStartKey())
+            const text = currentBlock.getText()
+            const cursorPosition = selection.getStartOffset()
+            
+            // Construct what the text would be with the composition data
+            const textBeforeCursor = text.substring(0, cursorPosition)
+            const compositionText = textBeforeCursor + e.data
+            
+            // Look for @ mentions in the composed text
+            const mentionMatch = compositionText.match(/@([^\s]*)$/)
+            
+            if (mentionMatch) {
+                const searchTerm = mentionMatch[1]
+                const hasKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(searchTerm)
+                
+                if (hasKorean && searchTerm.length > 0) {
+                    setManualMentionMode(true)
+                    setMentionSearchTerm(searchTerm)
+                    setIsMentionPopoverOpen(true)
+                    loadSuggestions(searchTerm)
+                }
+            }
+        }
+    }, [loadSuggestions])
+
+    const handleCompositionEnd = useCallback(() => {
+        setIsComposing(false)
+        
+        // After Korean input is completed, force check for mentions
+        setTimeout(() => {
+            if (ref.current) {
+                const editorState = ref.current.getEditorState()
+                const contentState = editorState.getCurrentContent()
+                const selection = editorState.getSelection()
+                const currentBlock = contentState.getBlockForKey(selection.getStartKey())
+                const text = currentBlock.getText()
+                const cursorPosition = selection.getStartOffset()
+                
+                // Look for @ mentions before cursor
+                const textBeforeCursor = text.substring(0, cursorPosition)
+                const mentionMatch = textBeforeCursor.match(/@([^\s]*)$/)
+                
+                if (mentionMatch) {
+                    const searchTerm = mentionMatch[1]
+                    loadSuggestions(searchTerm)
+                    setIsMentionPopoverOpen(true)
+                }
+            }
+        }, 10) // Small delay to ensure DOM is updated
+    }, [loadSuggestions])
+
     const onSearchChange = useCallback(({value}: { value: string }) => {
-        debouncedLoadSuggestion(value)
-    }, [suggestions])
+        // Update manual mention search term
+        if (manualMentionMode) {
+            setMentionSearchTerm(value)
+        }
+        
+        // For Korean input (IME), trigger immediate search for better UX
+        // Check if the value contains Korean characters
+        const hasKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(value)
+        if (hasKorean || value.length <= 2 || isComposing || manualMentionMode) {
+            // For Korean input, short queries, or during IME composition, search immediately without debounce
+            loadSuggestions(value)
+        } else {
+            // For longer English queries, use debounce to prevent too many requests
+            debouncedLoadSuggestion(value)
+        }
+    }, [suggestions, isComposing, manualMentionMode])
 
     const className = 'MarkdownEditorInput'
 
@@ -300,6 +462,63 @@ const MarkdownEditorInput = (props: Props): ReactElement => {
                     e.stopPropagation()
                 }
             }}
+            onKeyUp={(e: React.KeyboardEvent) => {
+                // Handle Korean input completion on key up
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                    setTimeout(() => {
+                        if (ref.current) {
+                            const editorState = ref.current.getEditorState()
+                            const contentState = editorState.getCurrentContent()
+                            const selection = editorState.getSelection()
+                            const currentBlock = contentState.getBlockForKey(selection.getStartKey())
+                            const text = currentBlock.getText()
+                            const cursorPosition = selection.getStartOffset()
+                            
+                            const textBeforeCursor = text.substring(0, cursorPosition)
+                            const mentionMatch = textBeforeCursor.match(/@([^\s]*)$/)
+                            
+                            if (mentionMatch) {
+                                const searchTerm = mentionMatch[1]
+                                const hasKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(searchTerm)
+                                
+                                if (hasKorean && searchTerm.length > 0) {
+                                    loadSuggestions(searchTerm)
+                                    setIsMentionPopoverOpen(true)
+                                }
+                            }
+                        }
+                    }, 10)
+                }
+            }}
+            onCompositionStart={handleCompositionStart}
+            onCompositionUpdate={handleCompositionUpdate}
+            onCompositionEnd={handleCompositionEnd}
+            onInput={(e: any) => {
+                // Handle Korean input in real-time
+                setTimeout(() => {
+                    if (ref.current) {
+                        const editorState = ref.current.getEditorState()
+                        const contentState = editorState.getCurrentContent()
+                        const selection = editorState.getSelection()
+                        const currentBlock = contentState.getBlockForKey(selection.getStartKey())
+                        const text = currentBlock.getText()
+                        const cursorPosition = selection.getStartOffset()
+                        
+                        const textBeforeCursor = text.substring(0, cursorPosition)
+                        const mentionMatch = textBeforeCursor.match(/@([^\s]*)$/)
+                        
+                        if (mentionMatch) {
+                            const searchTerm = mentionMatch[1]
+                            const hasKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(searchTerm)
+                            
+                            if (hasKorean) {
+                                loadSuggestions(searchTerm)
+                                setIsMentionPopoverOpen(true)
+                            }
+                        }
+                    }
+                }, 0)
+            }}
         >
             <Editor
                 editorKey={id}
@@ -314,12 +533,18 @@ const MarkdownEditorInput = (props: Props): ReactElement => {
                 handleReturn={props.saveOnEnter ? handleReturn : undefined}
             />
             <MentionSuggestions
-                open={isMentionPopoverOpen}
+                open={isMentionPopoverOpen || manualMentionMode}
                 onOpenChange={onMentionPopoverOpenChange}
                 suggestions={suggestions}
                 onSearchChange={onSearchChange}
                 entryComponent={Entry}
                 onAddMention={(mention) => {
+                    // Reset manual mode when mention is selected
+                    if (manualMentionMode) {
+                        setManualMentionMode(false)
+                        setMentionSearchTerm('')
+                    }
+                    
                     if (mention.isBoardMember) {
                         return
                     }
