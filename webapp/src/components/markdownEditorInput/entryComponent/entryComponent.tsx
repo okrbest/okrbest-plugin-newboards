@@ -30,12 +30,9 @@ const Entry = (props: EntryComponentProps): ReactElement => {
                         role='presentation'
                     />
                     <div className={theme?.mentionSuggestionsEntryText}>
-                        {mention.name}
+                        {mention.displayName}
                         {BotBadge && mention.is_bot && <BotBadge/>}
                         <GuestBadge show={mention.is_guest}/>
-                    </div>
-                    <div className={theme?.mentionSuggestionsEntryText}>
-                        {mention.displayName}
                     </div>
                 </div>
                 {!mention.isBoardMember &&
