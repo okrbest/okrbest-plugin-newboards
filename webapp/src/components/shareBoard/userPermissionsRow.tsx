@@ -63,8 +63,19 @@ const UserPermissionsRow = (props: Props): JSX.Element => {
                     />
                 }
                 <div className='ml-3'>
-                    <strong>{Utils.getUserDisplayName(user, teammateNameDisplay)}</strong>
-                    <strong className='ml-2 text-light'>{`@${user.username}`}</strong>
+                    <strong>{user.username}</strong>
+                    {(() => {
+                        // 이름(별명) 부분을 text-light 스타일로 표시
+                        if (user.firstname || user.lastname || user.nickname) {
+                            const fullName = Utils.getFullName(user);
+                            return (
+                                <strong className='ml-2 text-light'>
+                                    {`- ${fullName} ${user.nickname ? `(${user.nickname})` : ''}`.trim()}
+                                </strong>
+                            );
+                        }
+                        return null;
+                    })()}
                     {isMe && <strong className='ml-2 text-light'>{intl.formatMessage({id: 'ShareBoard.userPermissionsYouText', defaultMessage: '(You)'})}</strong>}
                     <GuestBadge show={user.is_guest}/>
                     <AdminBadge permissions={user.permissions}/>
