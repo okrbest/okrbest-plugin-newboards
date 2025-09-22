@@ -7,6 +7,7 @@ import {FormattedMessage, useIntl} from 'react-intl'
 import {Board} from '../blocks/board'
 import {Card} from '../blocks/card'
 import {Block} from '../blocks/block'
+import {sortBoardViewsAlphabetically} from '../blocks/boardView'
 import {Utils} from '../utils'
 import CompassIcon from '../widgets/icons/compassIcon'
 import TelemetryClient, {TelemetryActions, TelemetryCategory} from '../telemetry/telemetryClient'
@@ -55,14 +56,25 @@ const RHSBoardCards = (props: Props) => {
     const currentTeamId = useAppSelector(getCurrentTeamId)
     const allViews = useAppSelector(getViews)
 
-    // 해당 보드의 views만 필터링
+    // 해당 보드의 views만 필터링하고 정렬
     const currentBoardViews = useMemo(() => {
-        return Object.values(allViews).filter(view => view.boardId === board.id)
-    }, [allViews, board.id])
+        const filteredViews = Object.values(allViews).filter(view => view.boardId === board.id)
+        const sortedViews = sortBoardViewsAlphabetically(filteredViews)
+        console.log('RHSBoardCards Views Debug:', {
+            boardId: board.id,
+            allViewsCount: Object.keys(allViews).length,
+            filteredViewsCount: filteredViews.length,
+            currentViewId: currentViewId,
+            filteredViews: filteredViews.map(v => ({ id: v.id, title: v.title, boardId: v.boardId })),
+            sortedViews: sortedViews.map(v => ({ id: v.id, title: v.title, boardId: v.boardId }))
+        })
+        return sortedViews
+    }, [allViews, board.id, currentViewId])
 
     // 선택된 보드의 데이터 로드
     useEffect(() => {
         if (board.id) {
+            console.log('RHSBoardCards: Loading board data for board:', board.id)
             dispatch(loadBoardData(board.id))
         }
     }, [board.id, dispatch])
@@ -70,8 +82,15 @@ const RHSBoardCards = (props: Props) => {
     // 카드가 로드되지 않았을 때를 위한 로딩 상태
     const isLoading = Object.keys(allCardsObj).length === 0
 
-    // viewId 결정: currentViewId가 없으면 해당 보드의 첫 번째 view 사용
-    const viewId = currentViewId || (currentBoardViews.length > 0 ? currentBoardViews[0].id : '')
+    // 디버깅을 위한 viewId 정보 로그
+    const viewId = useMemo(() => {
+        console.log('RHSBoardCards viewId Info:', {
+            currentViewId: currentViewId,
+            availableViews: currentBoardViews.map(v => ({ id: v.id, title: v.title })),
+            firstViewId: currentBoardViews.length > 0 ? currentBoardViews[0].id : 'none'
+        })
+        return currentViewId // 디버깅용으로만 사용
+    }, [currentViewId, currentBoardViews])
 
     const handleCardClicked = (card: Card) => {
         TelemetryClient.trackEvent(TelemetryCategory, TelemetryActions.ViewCard, {board: board.id, card: card.id})
@@ -79,8 +98,13 @@ const RHSBoardCards = (props: Props) => {
         // workspace.tsx의 showCard 함수 방식을 참조하여 같은 탭에서 카드 열기
         const windowAny = window as any
         
-        // viewId 결정: currentViewId가 없으면 해당 보드의 첫 번째 view 사용
-        const finalViewId = viewId || (currentBoardViews.length > 0 ? currentBoardViews[0].id : '')
+        // 카테고리에서 클릭할 때와 동일하게 첫 번째 view 사용
+        const finalViewId = currentBoardViews.length > 0 ? currentBoardViews[0].id : ''
+        
+        if (!finalViewId) {
+            console.warn('No valid viewId found for board:', board.id)
+            return
+        }
         
         const params = {
             teamId: currentTeamId,
@@ -92,7 +116,7 @@ const RHSBoardCards = (props: Props) => {
         // Utils.getBoardPagePath를 사용해서 올바른 경로 생성
         const cardPath = generatePath('/team/:teamId/:boardId?/:viewId?/:cardId?', params)
         const cardUrl = `${windowAny.frontendBaseURL}${cardPath}`
-        console.log('Card URL:', cardUrl)
+        console.log('Card URL (first view):', cardUrl, 'params:', params)
         
         // 새 탭에서 카드 열기
         window.open(cardUrl, '_blank', 'noopener')
@@ -103,16 +127,30 @@ const RHSBoardCards = (props: Props) => {
         
         // 보드 페이지를 새 탭에서 열기
         const windowAny = window as any
-        // 기존 보드 이동 방식 참조: /team/{teamId}/{boardId}
-        const boardUrl = `${windowAny.frontendBaseURL}/team/${currentTeamId}/${board.id}`
+        
+        // 카테고리에서 클릭할 때와 동일하게 첫 번째 view로 이동 (viewId 없이)
+        // Utils.showBoard와 동일한 로직: viewId를 undefined로 설정하여 첫 번째 view 선택
+        const params = {
+            teamId: currentTeamId,
+            boardId: board.id,
+            viewId: undefined  // 첫 번째 view로 이동
+        }
+        const boardPath = generatePath('/team/:teamId/:boardId?/:viewId?', params)
+        const boardUrl = `${windowAny.frontendBaseURL}${boardPath}`
+        console.log('Board URL (first view):', boardUrl, 'params:', params)
         window.open(boardUrl, '_blank', 'noopener')
     }
 
     const handleCopyCardLink = (card: Card, e: React.MouseEvent) => {
         e.stopPropagation() // 카드 클릭 이벤트 방지
         
-        // viewId 결정: currentViewId가 없으면 해당 보드의 첫 번째 view 사용
-        const finalViewId = viewId || (currentBoardViews.length > 0 ? currentBoardViews[0].id : '')
+        // 카테고리에서 클릭할 때와 동일하게 첫 번째 view 사용
+        const finalViewId = currentBoardViews.length > 0 ? currentBoardViews[0].id : ''
+        
+        if (!finalViewId) {
+            console.warn('No valid viewId found for board:', board.id)
+            return
+        }
         
         const params = {
             teamId: currentTeamId,
@@ -125,7 +163,7 @@ const RHSBoardCards = (props: Props) => {
         const cardPath = generatePath('/team/:teamId/:boardId?/:viewId?/:cardId?', params)
         const windowAny = window as any
         const cardUrl = `${window.location.origin}${windowAny.frontendBaseURL}${cardPath}`
-        
+        console.log('Copy Card URL (first view):', cardUrl, 'params:', params)
         
         // 클립보드에 복사
         navigator.clipboard.writeText(cardUrl).then(() => {
