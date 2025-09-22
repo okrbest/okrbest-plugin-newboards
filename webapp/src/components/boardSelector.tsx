@@ -1,7 +1,7 @@
 // Copyright (c) 2020-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import React, {useState, useMemo, useCallback} from 'react'
+import React, {useState, useMemo, useCallback, useEffect} from 'react'
 import {IntlProvider, useIntl, FormattedMessage} from 'react-intl'
 import debounce from 'lodash/debounce'
 
@@ -48,7 +48,7 @@ const BoardSelector = () => {
     const searchHandler = useCallback(async (query: string): Promise<void> => {
         setSearchQuery(query)
 
-        if (query.trim().length === 0 || !teamId) {
+        if (!teamId) {
             return
         }
         const items = await octoClient.searchLinkableBoards(teamId, query)
@@ -58,6 +58,31 @@ const BoardSelector = () => {
     }, [teamId])
 
     const debouncedSearchHandler = useMemo(() => debounce(searchHandler, 200), [searchHandler])
+
+    // 검색어 변경 시 즉시 처리 (빈 검색어일 때는 즉시, 그 외에는 디바운스)
+    const handleSearchChange = useCallback((query: string) => {
+        if (query.trim().length === 0) {
+            // 빈 검색어일 때는 즉시 전체 목록 표시
+            searchHandler('')
+        } else {
+            // 검색어가 있을 때는 디바운스 적용
+            debouncedSearchHandler(query)
+        }
+    }, [searchHandler, debouncedSearchHandler])
+
+    // 컴포넌트 마운트 시 초기 검색 실행 (전체 목록 표시)
+    useEffect(() => {
+        if (teamId) {
+            searchHandler('')
+        }
+    }, [teamId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+    // currentChannel이 변경될 때마다 초기 검색 실행 (모달이 열릴 때)
+    useEffect(() => {
+        if (teamId && currentChannel) {
+            searchHandler('')
+        }
+    }, [currentChannel, teamId]) // eslint-disable-line react-hooks/exhaustive-deps
 
     const emptyResult = results.length === 0 && !isSearching && searchQuery
 
@@ -190,7 +215,7 @@ const BoardSelector = () => {
                                 className='searchQuery'
                                 placeholder={intl.formatMessage({id: 'boardSelector.search-for-boards', defaultMessage:'Search for boards'})}
                                 type='text'
-                                onChange={(e) => debouncedSearchHandler(e.target.value)}
+                                onChange={(e) => handleSearchChange(e.target.value)}
                                 autoFocus={true}
                                 maxLength={100}
                             />
@@ -198,7 +223,7 @@ const BoardSelector = () => {
                     </div>
                     <div className='searchResults'>
                         {/*When there are results to show*/}
-                        {searchQuery && results.length > 0 &&
+                        {results.length > 0 &&
                             results.map((result) => (<BoardSelectorItem
                                 key={result.id}
                                 item={result}
@@ -211,7 +236,7 @@ const BoardSelector = () => {
                         {emptyResult && <EmptyResults query={searchQuery}/>}
 
                         {/*default state, when user didn't search for anything. This is the initial screen*/}
-                        {!emptyResult && !searchQuery && <EmptySearch/>}
+                        {!emptyResult && !searchQuery && results.length === 0 && <EmptySearch/>}
                     </div>
                 </div>
             </Dialog>

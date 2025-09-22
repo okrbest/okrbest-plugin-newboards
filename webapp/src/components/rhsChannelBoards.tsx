@@ -59,6 +59,13 @@ const RHSChannelBoards = () => {
         ]).then(() => setDataLoaded(true))
     }, [currentChannel?.id])
 
+    // 채널 변경 시 카드 목록에서 보드 목록으로 돌아가기
+    useEffect(() => {
+        if (currentChannel?.id && currentView === 'cards') {
+            dispatch(showBoardsList())
+        }
+    }, [currentChannel?.id, dispatch])
+
     useWebsockets(teamId || '', (wsClient: WSClient) => {
         const onChangeBoardHandler = (_: WSClient, boards: Board[]): void => {
             dispatch(updateBoards(boards))
