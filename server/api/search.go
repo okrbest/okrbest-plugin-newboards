@@ -233,9 +233,9 @@ func (a *API) handleSearchLinkableBoards(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	// 빈 검색어일 때는 전체 보드 목록을 반환
 	if len(term) == 0 {
-		jsonStringResponse(w, http.StatusOK, "[]")
-		return
+		term = ""
 	}
 
 	auditRec := a.makeAuditRecord(r, "searchLinkableBoards", audit.Fail)
