@@ -47,8 +47,6 @@ import ManageCategoriesTourStep from '../../components/onboardingTour/manageCate
 
 import DeleteBoardDialog from './deleteBoardDialog'
 import SidebarBoardItem from './sidebarBoardItem'
-import {UserSettings} from '../../userSettings'
-import {Constants} from '../../constants'
 
 type Props = {
     activeCategoryId?: string
@@ -181,18 +179,14 @@ const SidebarCategory = (props: Props) => {
             return
         }
         telemetryClient.trackEvent(TelemetryCategory, TelemetryActions.DeleteBoard, {board: deleteBoard.id})
+
+        // Capture the category ID before deletion
+        const deletedFromCategoryID = props.categoryBoards.id
+
         mutator.deleteBoard(
             deleteBoard,
             intl.formatMessage({id: 'Sidebar.delete-board', defaultMessage: 'Delete board'}),
             async () => {
-                // 현재 페이지가 삭제하려는 보드와 같은 경우에만 lastBoardId 삭제
-                const currentBoardId = props.activeBoardID
-                if (currentBoardId === deleteBoard.id) {
-                    const teamId = match.params.teamId || UserSettings.lastTeamId || Constants.globalTeamId
-                    UserSettings.setLastBoardID(teamId, null)
-                }
-
-                // 기존 리다이렉트 로직
                 let nextBoardId: number | undefined
                 if (props.boards.length > 1) {
                     const deleteBoardIndex = props.boards.findIndex((board) => board.id === deleteBoard.id)
@@ -200,17 +194,19 @@ const SidebarCategory = (props: Props) => {
                 }
 
                 if (nextBoardId) {
-                    // This delay is needed because WSClient has a default 100 ms notification delay before updates
+                // This delay is needed because WSClient has a default 100 ms notification delay before updates
                     setTimeout(() => {
                         showBoard(props.boards[nextBoardId as number].id)
                     }, 120)
                 }
             },
             async () => {
+                // Restore the board to the category it was deleted from
+                await mutator.moveBoardToCategory(teamID, deleteBoard.id, deletedFromCategoryID, '')
                 showBoard(deleteBoard.id)
             },
         )
-    }, [showBoard, deleteBoard, props.boards, props.activeBoardID, match.params.teamId])
+    }, [showBoard, deleteBoard, props.boards, props.categoryBoards.id, teamID])
 
     const updateCategory = useCallback(async (value: boolean) => {
         const updatedCategory: Category = {
