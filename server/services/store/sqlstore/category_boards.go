@@ -146,7 +146,8 @@ func (s *SQLStore) reorderCategoryBoards(db sq.BaseRunner, categoryID string, ne
 	for i, boardID := range newBoardsOrder {
 		updateCase = updateCase.When(sq.Expr("?", boardID), sq.Expr(fmt.Sprintf("%d", i+model.CategoryBoardsSortOrderGap)))
 	}
-	updateCase.Else("sort_order")
+	// 삭제된 보드는 9999 이후 순서로 배치 (리스트 맨 뒤로)
+	updateCase.Else("9999")
 
 	query := s.getQueryBuilder(db).
 		Update(s.tablePrefix+"category_boards").

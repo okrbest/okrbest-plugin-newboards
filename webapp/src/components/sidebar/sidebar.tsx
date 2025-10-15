@@ -220,17 +220,78 @@ const Sidebar = (props: Props) => {
         const previousToBoardsMetadata = [...toSidebarCategory.boardMetadata]
 
         if (fromCategoryID === toCategoryID) {
-            const categoryBoardMetadata = [...toSidebarCategory.boardMetadata]
-            categoryBoardMetadata.splice(source.index, 1)
-            categoryBoardMetadata.splice(destination.index, 0, toSidebarCategory.boardMetadata[source.index])
+            console.log('[DND] 1. 드래그앤드롭 시작')
+            console.log('[DND] 원본 boardMetadata:', toSidebarCategory.boardMetadata.map(m => m.boardID))
+            console.log('[DND] source.index:', source.index, 'destination.index:', destination.index)
+            
+            // 활성 보드만 필터링 (화면에 보이는 것)
+            const existingBoardIDs = new Set(boards.map(b => b.id))
+            const activeBoardsMetadata = toSidebarCategory.boardMetadata.filter(m => existingBoardIDs.has(m.boardID))
+            console.log('[DND] 활성 보드:', activeBoardsMetadata.map(m => m.boardID))
+            
+            // 활성 보드 배열에서 드래그앤드롭 (source/destination은 활성 보드 기준 인덱스)
+            const [movedItem] = activeBoardsMetadata.splice(source.index, 1)
+            console.log('[DND] 이동할 항목:', movedItem?.boardID)
+            
+            activeBoardsMetadata.splice(destination.index, 0, movedItem)
+            console.log('[DND] 활성 보드 재정렬:', activeBoardsMetadata.map(m => m.boardID))
+            
+            // 전체 배열 재구성: 활성 보드 + 삭제된 보드(맨 뒤)
+            const deletedBoards = toSidebarCategory.boardMetadata.filter(m => !existingBoardIDs.has(m.boardID))
+            const categoryBoardMetadata = [...activeBoardsMetadata, ...deletedBoards]
+            console.log('[DND] 전체 배열:', categoryBoardMetadata.map(m => m.boardID))
 
             dispatch(updateCategoryBoardsOrder({categoryID: toCategoryID, boardsMetadata: categoryBoardMetadata}))
+            console.log('[DND] 2. Redux 업데이트 완료')
 
             const reorderedBoardIDs = categoryBoardMetadata.map((m) => m.boardID)
-            const updatedOrder = await octoClient.reorderSidebarCategoryBoards(team.id, toCategoryID, reorderedBoardIDs)
-            // if the request failed, rollback the pre updated state
-            if (reorderedBoardIDs.length > 0 && updatedOrder.length === 0) {
-                dispatch(updateCategoryBoardsOrder({categoryID: toCategoryID, boardsMetadata: previousToBoardsMetadata}))                
+            console.log('[DND] 3. 서버 전송할 IDs:', reorderedBoardIDs)
+            try {
+                const updatedOrder = await octoClient.reorderSidebarCategoryBoards(team.id, toCategoryID, reorderedBoardIDs)
+                console.log('[DND] 4. 서버 응답:', updatedOrder)
+                // if the request failed, rollback the pre updated state
+                if (reorderedBoardIDs.length > 0 && updatedOrder.length === 0) {
+                    console.log('[DND] 5. 서버 응답 실패, 재동기화 후 재시도')
+                    // 최신 상태 가져오기
+                    const result = await dispatch(fetchSidebarCategories(team.id))
+                    console.log('[DND] fetch 완료, 재시도')
+                    
+                    // 최신 상태로 다시 드래그앤드롭 처리
+                    if (result.payload) {
+                        const latestCategories = result.payload as CategoryBoards[]
+                        const latestCategory = latestCategories.find((c) => c.id === toCategoryID)
+                        
+                        if (latestCategory) {
+                            const existingBoardIDs = new Set(boards.map(b => b.id))
+                            const latestActiveBoards = latestCategory.boardMetadata.filter(m => existingBoardIDs.has(m.boardID))
+                            console.log('[DND] 최신 활성 보드:', latestActiveBoards.map(m => m.boardID))
+                            
+                            const [retryMovedItem] = latestActiveBoards.splice(source.index, 1)
+                            latestActiveBoards.splice(destination.index, 0, retryMovedItem)
+                            
+                            const latestDeletedBoards = latestCategory.boardMetadata.filter(m => !existingBoardIDs.has(m.boardID))
+                            const retryBoardMetadata = [...latestActiveBoards, ...latestDeletedBoards]
+                            
+                            dispatch(updateCategoryBoardsOrder({categoryID: toCategoryID, boardsMetadata: retryBoardMetadata}))
+                            
+                            const retryBoardIDs = retryBoardMetadata.map((m) => m.boardID)
+                            console.log('[DND] 재시도 전송:', retryBoardIDs)
+                            const retryResult = await octoClient.reorderSidebarCategoryBoards(team.id, toCategoryID, retryBoardIDs)
+                            console.log('[DND] 재시도 결과:', retryResult)
+                        }
+                    }
+                } else {
+                    console.log('[DND] 5. 성공!')
+                }
+            } catch (error) {
+                console.error('[DND] 에러:', error)
+                console.log('[DND] catch 블록 - 롤백 및 재동기화')
+                // 서버 요청 실패 시 롤백하고 최신 상태 다시 가져오기
+                dispatch(updateCategoryBoardsOrder({categoryID: toCategoryID, boardsMetadata: previousToBoardsMetadata}))
+                console.log('[DND] fetch 시작 - 서버에서 최신 상태 가져오기')
+                // 최신 카테고리 상태를 다시 가져와서 동기화
+                await dispatch(fetchSidebarCategories(team.id))
+                console.log('[DND] fetch 완료')
             }
         } else {
             // board moved to a different category
@@ -260,10 +321,17 @@ const Sidebar = (props: Props) => {
             }
 
             const reorderedBoardIDs = categoryBoardMetadata.map((m) => m.boardID)
-            const updatedOrder = await octoClient
-                .reorderSidebarCategoryBoards(team.id, toCategoryID, reorderedBoardIDs)
-            if (reorderedBoardIDs.length > 0 && updatedOrder.length === 0) {
+            try {
+                const updatedOrder = await octoClient.reorderSidebarCategoryBoards(team.id, toCategoryID, reorderedBoardIDs)
+                if (reorderedBoardIDs.length > 0 && updatedOrder.length === 0) {
+                    dispatch(updateCategoryBoardsOrder({categoryID: toCategoryID, boardsMetadata: previousToBoardsMetadata}))
+                }
+            } catch (error) {
+                // 서버 요청 실패 시 롤백하고 최신 상태 다시 가져오기
                 dispatch(updateCategoryBoardsOrder({categoryID: toCategoryID, boardsMetadata: previousToBoardsMetadata}))
+                dispatch(updateBoardCategories([{...fromCategoryBoardMetadata, categoryID: fromCategoryID}]))
+                // 최신 카테고리 상태를 다시 가져와서 동기화
+                dispatch(fetchSidebarCategories(team.id))
             }
         }
     }, [team, sidebarCategories])
