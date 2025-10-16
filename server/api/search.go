@@ -305,9 +305,9 @@ func (a *API) handleSearchAllBoards(w http.ResponseWriter, r *http.Request) {
 	term := r.URL.Query().Get("q")
 	userID := getUserID(r)
 
+	// 빈 검색어일 때는 빈 문자열로 처리하여 모든 보드 반환
 	if len(term) == 0 {
-		jsonStringResponse(w, http.StatusOK, "[]")
-		return
+		term = ""
 	}
 
 	auditRec := a.makeAuditRecord(r, "searchAllBoards", audit.Fail)

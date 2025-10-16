@@ -77,6 +77,24 @@ const SearchDialog = (props: Props): JSX.Element => {
 
     const debouncedSearchHandler = useMemo(() => debounce(searchHandler, 200), [])
 
+    // 항상 마운트 시에 초기 검색 실행
+    useEffect(() => {
+        console.log('SearchDialog useEffect 실행됨')
+        // searchHandler 대신 props.searchHandler를 직접 사용
+        const performInitialSearch = async () => {
+            console.log('performInitialSearch 시작')
+            setIsSearching(true)
+            setSelected(-1)
+            setSearchQuery('')
+            const searchResults = await props.searchHandler('')
+            console.log('searchResults:', searchResults)
+            setResults(searchResults)
+            setIsSearching(false)
+            console.log('performInitialSearch 완료')
+        }
+        performInitialSearch()
+    }, []) // 마운트 시에만 실행
+
     const emptyResult = results.length === 0 && !isSearching && searchQuery
 
     const handleUpDownKeyPress = (e: KeyboardEvent) => {
@@ -127,7 +145,7 @@ const SearchDialog = (props: Props): JSX.Element => {
                 </div>
                 <div className='searchResults'>
                     {/*When there are results to show*/}
-                    {searchQuery && results.length > 0 &&
+                    {results.length > 0 &&
                         results.map((result) => (
                             <div
                                 key={Utils.uuid()}
@@ -142,8 +160,8 @@ const SearchDialog = (props: Props): JSX.Element => {
                     {/*when user searched for something and there were no results*/}
                     {emptyResult && <EmptyResults query={searchQuery}/>}
 
-                    {/*default state, when user didn't search for anything. This is the initial screen*/}
-                    {!emptyResult && !searchQuery && <EmptySearch/>}
+                    {/*default state, when user didn't search for anything and no results. This is the initial screen*/}
+                    {!emptyResult && !searchQuery && results.length === 0 && <EmptySearch/>}
                 </div>
             </div>
         </Dialog>
