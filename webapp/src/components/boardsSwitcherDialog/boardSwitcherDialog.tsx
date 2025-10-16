@@ -29,6 +29,7 @@ const BoardSwitcherDialog = (props: Props): JSX.Element => {
     const [refs, setRefs] = useState<MutableRefObject<any>>(useRef([]))
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [IDs, setIDs] = useState<any>({})
+    const [initialData, setInitialData] = useState<ReactNode[]>([])
     const intl = useIntl()
     const team = useAppSelector(getCurrentTeam)
     const me = useAppSelector(getMe)
@@ -61,7 +62,7 @@ const BoardSwitcherDialog = (props: Props): JSX.Element => {
     })
 
     const searchHandler = async (query: string): Promise<ReactNode[]> => {
-        if (query.trim().length === 0 || !team) {
+        if (!team) {
             return []
         }
 
@@ -93,6 +94,15 @@ const BoardSwitcherDialog = (props: Props): JSX.Element => {
         })
     }
 
+    // 컴포넌트 마운트 시 초기 검색 실행 (전체 목록 표시)
+    useEffect(() => {
+        if (team) {
+            searchHandler('').then((results) => {
+                setInitialData(results)
+            })
+        }
+    }, [team])
+
     const handleEnterKeyPress = (e: KeyboardEvent) => {
         if (Utils.isKeyPressed(e, Constants.keyCodes.ENTER) && selected > -1) {
             e.preventDefault()
@@ -120,6 +130,7 @@ const BoardSwitcherDialog = (props: Props): JSX.Element => {
             title={title}
             subTitle={subTitle}
             searchHandler={searchHandler}
+            initialData={initialData}
             selected={selected}
             setSelected={(n: number) => setSelected(n)}
         />

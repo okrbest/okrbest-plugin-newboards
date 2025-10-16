@@ -822,11 +822,19 @@ class OctoClient {
     async patchBoard(boardId: string, boardPatch: BoardPatch): Promise<Response> {
         Utils.log(`patchBoard: ${boardId} board`)
         const body = JSON.stringify(boardPatch)
-        return fetch(`${this.getBaseURL()}/api/v2/boards/${boardId}`, Client4.getOptions({
+        const response = await fetch(`${this.getBaseURL()}/api/v2/boards/${boardId}`, Client4.getOptions({
             method: 'PATCH',
             headers: this.headers(),
             body,
         }))
+        
+        if (response.status !== 200) {
+            const json = await this.getJson(response, {})
+            Utils.logError(`patchBoard failed with status ${response.status}: ${JSON.stringify(json)}`)
+            throw new Error(`patchBoard failed with status ${response.status}`)
+        }
+        
+        return response
     }
 
     async deleteBoard(boardId: string): Promise<Response> {
@@ -1093,11 +1101,11 @@ class OctoClient {
     async sendBoardNotification(boardID: string, cardID: string): Promise<Response> {
         const path = `/api/v2/boards/${boardID}/notify`
         const body = JSON.stringify({cardID})
-        return fetch(this.getBaseURL() + path, {
+        return fetch(this.getBaseURL() + path, Client4.getOptions({
             method: 'POST',
             headers: this.headers(),
             body,
-        })
+        }))
     }
 }
 
