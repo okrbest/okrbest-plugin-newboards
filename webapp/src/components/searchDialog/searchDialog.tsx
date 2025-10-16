@@ -79,18 +79,14 @@ const SearchDialog = (props: Props): JSX.Element => {
 
     // 항상 마운트 시에 초기 검색 실행
     useEffect(() => {
-        console.log('SearchDialog useEffect 실행됨')
         // searchHandler 대신 props.searchHandler를 직접 사용
         const performInitialSearch = async () => {
-            console.log('performInitialSearch 시작')
             setIsSearching(true)
             setSelected(-1)
             setSearchQuery('')
             const searchResults = await props.searchHandler('')
-            console.log('searchResults:', searchResults)
             setResults(searchResults)
             setIsSearching(false)
-            console.log('performInitialSearch 완료')
         }
         performInitialSearch()
     }, []) // 마운트 시에만 실행

@@ -62,15 +62,11 @@ const BoardSwitcherDialog = (props: Props): JSX.Element => {
     })
 
     const searchHandler = async (query: string): Promise<ReactNode[]> => {
-        console.log('boardSwitcherDialog searchHandler 호출됨, query:', query)
         if (!team) {
-            console.log('team이 없음')
             return []
         }
 
-        console.log('octoClient.searchAll 호출 중...')
         const items = await octoClient.searchAll(query)
-        console.log('searchAll 결과:', items)
         const untitledBoardTitle = intl.formatMessage({id: 'ViewTitle.untitled-board', defaultMessage: 'Untitled board'})
         refs.current = items.map((_, i) => refs.current[i] ?? createRef())
         setRefs(refs)
@@ -100,10 +96,8 @@ const BoardSwitcherDialog = (props: Props): JSX.Element => {
 
     // 컴포넌트 마운트 시 초기 검색 실행 (전체 목록 표시)
     useEffect(() => {
-        console.log('boardSwitcherDialog useEffect 실행됨, team:', team)
         if (team) {
             searchHandler('').then((results) => {
-                console.log('초기 검색 결과:', results)
                 setInitialData(results)
             })
         }
