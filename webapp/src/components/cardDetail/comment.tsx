@@ -20,6 +20,8 @@ import {getUser} from '../../store/users'
 import {useAppSelector} from '../../store/hooks'
 import Tooltip from '../../widgets/tooltip'
 import GuestBadge from '../../widgets/guestBadge'
+import {getClientConfig} from '../../store/clientConfig'
+import {ClientConfig} from '../../config/clientConfig'
 
 import './comment.scss'
 import {formatText, messageHtmlToComponent} from '../../webapp_globals'
@@ -37,6 +39,7 @@ const Comment: FC<Props> = (props: Props) => {
     const {comment, userId, userImageUrl} = props
     const intl = useIntl()
     const user = useAppSelector(getUser(userId))
+    const clientConfig = useAppSelector<ClientConfig>(getClientConfig)
     const date = new Date(comment.createAt)
 
     const selectedTeam = useAppSelector(getCurrentTeam)
@@ -63,7 +66,7 @@ const Comment: FC<Props> = (props: Props) => {
                     className='comment-avatar'
                     src={userImageUrl}
                 />
-                <div className='comment-username'>{user?.username}</div>
+                <div className='comment-username'>{user ? Utils.getUserDisplayName(user, clientConfig.teammateNameDisplay) : ''}</div>
                 <GuestBadge show={user?.is_guest}/>
 
                 <Tooltip title={Utils.displayDateTime(date, intl)}>
