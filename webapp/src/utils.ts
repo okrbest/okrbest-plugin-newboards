@@ -112,6 +112,23 @@ class Utils {
             if (fullName !== '') {
                 displayName = fullName
             }
+        } else if (nameFormat === ShowUsername) {
+            const fullName = Utils.getFullName(user)
+            const nickname = user.nickname ? `(${user.nickname})` : ''
+
+            if (fullName && nickname) {
+                // 성명과 닉네임 모두 있는 경우: "admin - 홍길동 김 (관리자)"
+                displayName = `${user.username} - ${fullName} ${nickname}`
+            } else if (fullName) {
+                // 성명만 있는 경우: "admin - 홍길동 김"
+                displayName = `${user.username} - ${fullName}`
+            } else if (nickname) {
+                // 닉네임만 있는 경우: "admin (관리자)"
+                displayName = `${user.username} ${nickname}`
+            } else {
+                // 둘 다 없는 경우: "admin"
+                displayName = user.username
+            }
         }
         return displayName
     }
