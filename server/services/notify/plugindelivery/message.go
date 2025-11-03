@@ -11,14 +11,14 @@ import (
 
 const (
 	// TODO: localize these when i18n is available.
-	defCommentTemplate     = "@%s mentioned you in a comment on the card [%s](%s) in board [%s](%s)\n> %s"
-	defDescriptionTemplate = "@%s mentioned you in the card [%s](%s) in board [%s](%s)\n> %s"
+	defCommentTemplate     = "@%s님이 @%s님을 카드 [%s](%s) 댓글에서 언급했습니다 (보드: [%s](%s))\n> %s"
+	defDescriptionTemplate = "@%s님이 @%s님을 카드 [%s](%s)에서 언급했습니다 (보드: [%s](%s))\n> %s"
 )
 
-func formatMessage(author string, extract string, card string, link string, block *model.Block, boardLink string, board string) string {
+func formatMessage(author string, mentionedUser string, extract string, card string, link string, block *model.Block, boardLink string, board string) string {
 	template := defDescriptionTemplate
 	if block.Type == model.TypeComment {
 		template = defCommentTemplate
 	}
-	return fmt.Sprintf(template, author, card, link, board, boardLink, extract)
+	return fmt.Sprintf(template, author, mentionedUser, card, link, board, boardLink, extract)
 }
