@@ -200,6 +200,14 @@ const MarkdownEditorInput = (props: Props): ReactElement => {
         // `initialTextUsed` flag records if the initialText prop has been used
         // to se the editor state once as a truthy value.
         // Once used, we don't react to its changing value
+        
+        // However, if initialText becomes empty, we should reset the editor
+        if (initialText === '' && initialTextCache !== '') {
+            setEditorState(generateEditorState(''))
+            setInitialTextCache('')
+            setInitialTextUsed(false)
+            return
+        }
 
         if (!initialTextUsed && initialText && initialText !== initialTextCache) {
             setEditorState(generateEditorState(initialText || ''))
