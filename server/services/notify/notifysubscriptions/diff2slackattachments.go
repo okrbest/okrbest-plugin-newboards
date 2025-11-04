@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"regexp"
 	"strings"
 	"sync"
 	"text/template"
@@ -193,8 +194,8 @@ func cardDiff2SlackAttachment(cardDiff *Diff, opts DiffConvOpts) (*mm_model.Slac
 	// property changes
 	attachment.Fields = appendPropertyChanges(attachment.Fields, cardDiff)
 
-	// comment add/delete
-	attachment.Fields = appendCommentChanges(attachment.Fields, cardDiff)
+	// comment add/delete - 멘션 알림과 중복되므로 제외
+	// attachment.Fields = appendCommentChanges(attachment.Fields, cardDiff)
 
 	// File Attachment add/delete
 	attachment.Fields = appendAttachmentChanges(attachment.Fields, cardDiff)
@@ -360,6 +361,16 @@ func appendContentChanges(fields []*mm_model.SlackAttachmentField, cardDiff *Dif
 
 		markdown := generateMarkdownDiff(oldTitle, newTitle, logger)
 		if markdown == "" {
+			continue
+		}
+
+		// 실제 멘션 패턴이 포함된 Description 변경은 멘션 알림과 중복되므로 제외
+		// 패턴: @username (@ 뒤에 영문자/숫자/언더스코어/하이픈)
+		mentionPattern := regexp.MustCompile(`@[a-zA-Z0-9_\-]+`)
+		if mentionPattern.MatchString(newTitle) || mentionPattern.MatchString(oldTitle) {
+			logger.Debug("appendContentChanges - skipping description with mention",
+				mlog.String("type", string(child.BlockType)),
+			)
 			continue
 		}
 
