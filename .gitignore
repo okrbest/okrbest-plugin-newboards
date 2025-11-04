@@ -56,3 +56,11 @@ server/**/*.coverage
 
 # notice
 .notice-work
+
+# Claude 
+.claude
+**/CLAUDE.local.md
+CLAUDE*.md
+.cursorrules
+
+.analysis
