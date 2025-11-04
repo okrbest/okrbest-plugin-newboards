@@ -20,9 +20,9 @@ import (
 
 const (
 	// card change notifications.
-	defAddCardNotify    = "{{.Authors | printAuthors \"unknown_user\" }} has added the card {{. | makeLink}}\n"
-	defModifyCardNotify = "###### {{.Authors | printAuthors \"unknown_user\" }} has modified the card {{. | makeLink}} on the board {{. | makeBoardLink}}\n"
-	defDeleteCardNotify = "{{.Authors | printAuthors \"unknown_user\" }} has deleted the card {{. | makeLink}}\n"
+	defAddCardNotify    = "{{.Authors | printAuthors \"unknown_user\" }} has added the card [{{.Card.Title}}]({{. | makeLink}})\n"
+	defModifyCardNotify = "###### {{.Authors | printAuthors \"unknown_user\" }} has modified the card [{{.Card.Title}}]({{. | makeLink}}) on the board {{. | makeBoardLink}}\n"
+	defDeleteCardNotify = "{{.Authors | printAuthors \"unknown_user\" }} has deleted the card [{{.Card.Title}}]({{. | makeLink}})\n"
 )
 
 var (
@@ -149,6 +149,8 @@ func cardDiff2SlackAttachment(cardDiff *Diff, opts DiffConvOpts) (*mm_model.Slac
 		}
 		attachment.Pretext = buf.String()
 		attachment.Fallback = attachment.Pretext
+		// 박스 클릭을 위해 TitleLink만 설정 (Title은 표시하지 않음)
+		attachment.TitleLink = opts.MakeCardLink(cardDiff.Card, cardDiff.Board, cardDiff.Card)
 		return attachment, nil
 	}
 
@@ -160,6 +162,8 @@ func cardDiff2SlackAttachment(cardDiff *Diff, opts DiffConvOpts) (*mm_model.Slac
 		}
 		attachment.Pretext = buf.String()
 		attachment.Fallback = attachment.Pretext
+		// 박스 클릭을 위해 TitleLink만 설정 (Title은 표시하지 않음)
+		attachment.TitleLink = opts.MakeCardLink(cardDiff.Card, cardDiff.Board, cardDiff.Card)
 		return attachment, nil
 	}
 
@@ -179,6 +183,9 @@ func cardDiff2SlackAttachment(cardDiff *Diff, opts DiffConvOpts) (*mm_model.Slac
 	}
 	attachment.Pretext = buf.String()
 	attachment.Fallback = attachment.Pretext
+
+	// 박스 클릭을 위해 TitleLink만 설정 (Title은 표시하지 않음)
+	attachment.TitleLink = opts.MakeCardLink(cardDiff.Card, cardDiff.Board, cardDiff.Card)
 
 	// title changes
 	attachment.Fields = appendTitleChanges(attachment.Fields, cardDiff)
