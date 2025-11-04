@@ -19,14 +19,16 @@ var (
 // SubscriptionDeliverSlashAttachments notifies a user that changes were made to a block they are subscribed to.
 func (pd *PluginDelivery) SubscriptionDeliverSlackAttachments(teamID string, subscriberID string, subscriptionType model.SubscriberType,
 	attachments []*mm_model.SlackAttachment) error {
-	// check subscriber is member of channel
-	_, err := pd.api.GetUserByID(subscriberID)
-	if err != nil {
-		if model.IsErrNotFound(err) {
-			// subscriber is not a member of the channel; fail silently.
-			return nil
+	// check subscriber is member of channel (only for user subscriptions)
+	if subscriptionType == model.SubTypeUser {
+		_, err := pd.api.GetUserByID(subscriberID)
+		if err != nil {
+			if model.IsErrNotFound(err) {
+				// subscriber is not a member of the channel; fail silently.
+				return nil
+			}
+			return fmt.Errorf("cannot fetch channel member for user %s: %w", subscriberID, err)
 		}
-		return fmt.Errorf("cannot fetch channel member for user %s: %w", subscriberID, err)
 	}
 
 	channelID, err := pd.getDirectChannelID(teamID, subscriberID, subscriptionType, pd.botID)
