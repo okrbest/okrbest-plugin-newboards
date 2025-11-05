@@ -18,9 +18,9 @@ var (
 	ErrNewBoardCannotHaveID = errors.New("new board cannot have an ID")
 )
 
-const linkBoardMessage = "@%s linked the board [%s](%s) with this channel"
-const unlinkBoardMessage = "@%s unlinked the board [%s](%s) with this channel"
-const cardNotifyMessage = "@%s notified about card [%s](%s) in board [%s](%s)"
+const linkBoardMessage = "@%s님이 보드 [%s](%s)를 이 채널에 연결했습니다"
+const unlinkBoardMessage = "@%s님이 보드 [%s](%s)와 이 채널의 연결을 해제했습니다"
+const cardNotifyMessage = "@%s님이 보드 [%s](%s)의 카드 [%s](%s)에 대해 알림을 보냈습니다"
 
 var errNoDefaultCategoryFound = errors.New("no default category found for user")
 
