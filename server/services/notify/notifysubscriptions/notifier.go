@@ -169,6 +169,7 @@ func (n *notifier) notifySubscribers(hint *model.NotificationHint) error {
 		mlog.Any("hint", hint),
 		mlog.String("board_id", board.ID),
 		mlog.String("card_id", card.ID),
+		mlog.String("channel_id", board.ChannelID),
 		mlog.Int("sub_count", len(subs)),
 	)
 
@@ -202,7 +203,7 @@ func (n *notifier) notifySubscribers(hint *model.NotificationHint) error {
 	opts := DiffConvOpts{
 		Language: "en", // TODO: use correct language when i18n is available on server.
 		MakeCardLink: func(block *model.Block, board *model.Board, card *model.Block) string {
-			return fmt.Sprintf("[%s](%s)", block.Title, utils.MakeCardLink(n.serverRoot, board.TeamID, board.ID, card.ID))
+			return utils.MakeCardLink(n.serverRoot, board.TeamID, board.ID, card.ID)
 		},
 		MakeBoardLink: func(board *model.Board) string {
 			return fmt.Sprintf("[%s](%s)", board.Title, utils.MakeBoardLink(n.serverRoot, board.TeamID, board.ID))
@@ -217,38 +218,53 @@ func (n *notifier) notifySubscribers(hint *model.NotificationHint) error {
 
 	merr := merror.New()
 	if len(attachments) > 0 {
-		for _, sub := range subs {
-			// don't notify the author of their own changes.
-			authorName, isAuthor := diffAuthors[sub.SubscriberID]
-			if isAuthor && len(diffAuthors) == 1 {
-				n.logger.Debug("notifySubscribers - skipping author",
-					mlog.Any("hint", hint),
-					mlog.String("author_id", sub.SubscriberID),
-					mlog.String("author_username", authorName),
-				)
-				continue
-			}
-
-			// make sure the subscriber still has permissions for the board.
-			if !n.permissions.HasPermissionToBoard(sub.SubscriberID, board.ID, model.PermissionViewBoard) {
-				n.logger.Debug("notifySubscribers - skipping non-board member",
-					mlog.Any("hint", hint),
-					mlog.String("subscriber_id", sub.SubscriberID),
-					mlog.String("board_id", board.ID),
-				)
-				continue
-			}
-
-			n.logger.Debug("notifySubscribers - deliver",
+		// 보드가 채널에 연결되어 있으면 채널로만 알림 전송
+		if board.ChannelID != "" {
+			n.logger.Debug("notifySubscribers - deliver to channel",
 				mlog.Any("hint", hint),
-				mlog.String("modified_by_id", hint.ModifiedByID),
-				mlog.String("subscriber_id", sub.SubscriberID),
-				mlog.String("subscriber_type", string(sub.SubscriberType)),
+				mlog.String("board_id", board.ID),
+				mlog.String("card_id", card.ID),
+				mlog.String("channel_id", board.ChannelID),
 			)
 
-			if err = n.delivery.SubscriptionDeliverSlackAttachments(board.TeamID, sub.SubscriberID, sub.SubscriberType, attachments); err != nil {
-				merr.Append(fmt.Errorf("cannot deliver notification to subscriber %s [%s]: %w",
-					sub.SubscriberID, sub.SubscriberType, err))
+			if err = n.delivery.SubscriptionDeliverSlackAttachments(board.TeamID, board.ChannelID, model.SubTypeChannel, attachments); err != nil {
+				merr.Append(fmt.Errorf("cannot deliver notification to channel %s: %w", board.ChannelID, err))
+			}
+		} else {
+			// 채널 연결이 없으면 개인 구독자들에게 DM 전송
+			for _, sub := range subs {
+				// don't notify the author of their own changes.
+				authorName, isAuthor := diffAuthors[sub.SubscriberID]
+				if isAuthor && len(diffAuthors) == 1 {
+					n.logger.Debug("notifySubscribers - skipping author",
+						mlog.Any("hint", hint),
+						mlog.String("author_id", sub.SubscriberID),
+						mlog.String("author_username", authorName),
+					)
+					continue
+				}
+
+				// make sure the subscriber still has permissions for the board.
+				if !n.permissions.HasPermissionToBoard(sub.SubscriberID, board.ID, model.PermissionViewBoard) {
+					n.logger.Debug("notifySubscribers - skipping non-board member",
+						mlog.Any("hint", hint),
+						mlog.String("subscriber_id", sub.SubscriberID),
+						mlog.String("board_id", board.ID),
+					)
+					continue
+				}
+
+				n.logger.Debug("notifySubscribers - deliver",
+					mlog.Any("hint", hint),
+					mlog.String("modified_by_id", hint.ModifiedByID),
+					mlog.String("subscriber_id", sub.SubscriberID),
+					mlog.String("subscriber_type", string(sub.SubscriberType)),
+				)
+
+				if err = n.delivery.SubscriptionDeliverSlackAttachments(board.TeamID, sub.SubscriberID, sub.SubscriberType, attachments); err != nil {
+					merr.Append(fmt.Errorf("cannot deliver notification to subscriber %s [%s]: %w",
+						sub.SubscriberID, sub.SubscriberType, err))
+				}
 			}
 		}
 	} else {
