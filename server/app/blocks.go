@@ -53,6 +53,9 @@ func (a *App) DuplicateBlock(boardID string, blockID string, userID string, asTe
 	a.blockChangeNotifier.Enqueue(func() error {
 		for _, block := range blocks {
 			a.wsAdapter.BroadcastBlockChange(board.TeamID, block)
+			a.webhook.NotifyUpdate(block)
+			// 템플릿에서 카드 생성 시에도 구독 알림이 전송되도록 notifyBlockChanged 호출
+			a.notifyBlockChanged(notify.Add, block, nil, userID)
 		}
 		return nil
 	})
