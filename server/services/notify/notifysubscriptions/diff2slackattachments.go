@@ -21,9 +21,9 @@ import (
 
 const (
 	// card change notifications.
-	defAddCardNotify    = "{{.Authors | printAuthors \"unknown_user\" }} has added the card [{{.Card.Title}}]({{. | makeLink}})\n"
-	defModifyCardNotify = "###### {{.Authors | printAuthors \"unknown_user\" }} has modified the card [{{.Card.Title}}]({{. | makeLink}}) on the board {{. | makeBoardLink}}\n"
-	defDeleteCardNotify = "{{.Authors | printAuthors \"unknown_user\" }} has deleted the card [{{.Card.Title}}]({{. | makeLink}})\n"
+	defAddCardNotify    = "{{.Authors | printAuthors \"알 수 없는 사용자\" }}님이 카드 [{{.Card.Title}}]({{. | makeLink}})를 추가했습니다.\n"
+	defModifyCardNotify = "###### {{.Authors | printAuthors \"알 수 없는 사용자\" }}님이 보드 {{. | makeBoardLink}}에서 카드 [{{.Card.Title}}]({{. | makeLink}})를 수정했습니다.\n"
+	defDeleteCardNotify = "{{.Authors | printAuthors \"알 수 없는 사용자\" }}님이 카드 [{{.Card.Title}}]({{. | makeLink}})를 삭제했습니다.\n"
 )
 
 var (
@@ -213,7 +213,7 @@ func appendTitleChanges(fields []*mm_model.SlackAttachmentField, cardDiff *Diff)
 	if cardDiff.NewBlock.Title != cardDiff.OldBlock.Title {
 		fields = append(fields, &mm_model.SlackAttachmentField{
 			Short: false,
-			Title: "Title",
+			Title: "제목",
 			Value: fmt.Sprintf("%s  ~~`%s`~~", stripNewlines(cardDiff.NewBlock.Title), stripNewlines(cardDiff.OldBlock.Title)),
 		})
 	}
@@ -266,7 +266,7 @@ func appendCommentChanges(fields []*mm_model.SlackAttachmentField, cardDiff *Dif
 			if format != "" {
 				fields = append(fields, &mm_model.SlackAttachmentField{
 					Short: false,
-					Title: "Comment by " + makeAuthorsList(child.Authors, "unknown_user"), // todo:  localize this when server has i18n
+					Title: makeAuthorsList(child.Authors, "알 수 없는 사용자") + "님의 댓글", // todo:  localize this when server has i18n
 					Value: fmt.Sprintf(format, msg),
 				})
 			}
@@ -281,17 +281,17 @@ func appendAttachmentChanges(fields []*mm_model.SlackAttachmentField, cardDiff *
 			var format string
 			var msg string
 			if child.NewBlock != nil && child.OldBlock == nil {
-				format = "Added an attachment: **`%s`**"
+				format = "첨부 파일 추가: **`%s`**"
 				msg = child.NewBlock.Title
 			} else {
-				format = "Removed ~~`%s`~~ attachment"
+				format = "첨부 파일 삭제: ~~`%s`~~"
 				msg = stripNewlines(child.OldBlock.Title)
 			}
 
 			if format != "" {
 				fields = append(fields, &mm_model.SlackAttachmentField{
 					Short: false,
-					Title: "Changed by " + makeAuthorsList(child.Authors, "unknown_user"), // TODO:  localize this when server has i18n
+					Title: makeAuthorsList(child.Authors, "알 수 없는 사용자") + "님이 변경함", // TODO:  localize this when server has i18n
 					Value: fmt.Sprintf(format, msg),
 				})
 			}
@@ -308,12 +308,12 @@ func appendContentChanges(fields []*mm_model.SlackAttachmentField, cardDiff *Dif
 		switch {
 		case child.OldBlock == nil && child.NewBlock != nil:
 			opAdd = true
-			opString = "added" // TODO: localize when i18n added to server
+			opString = "추가됨" // TODO: localize when i18n added to server
 		case child.NewBlock == nil || child.NewBlock.DeleteAt != 0:
 			opDelete = true
-			opString = "deleted"
+			opString = "삭제됨"
 		default:
-			opString = "modified"
+			opString = "수정됨"
 		}
 
 		var newTitle, oldTitle string
@@ -330,12 +330,12 @@ func appendContentChanges(fields []*mm_model.SlackAttachmentField, cardDiff *Dif
 			continue
 		case model.TypeImage:
 			if newTitle == "" {
-				newTitle = "An image was " + opString + "." // TODO: localize when i18n added to server
+				newTitle = "이미지가 " + opString + "." // TODO: localize when i18n added to server
 			}
 			oldTitle = ""
 		case model.TypeAttachment:
 			if newTitle == "" {
-				newTitle = "A file attachment was " + opString + "." // TODO: localize when i18n added to server
+				newTitle = "첨부 파일이 " + opString + "." // TODO: localize when i18n added to server
 			}
 			oldTitle = ""
 		default:
@@ -376,7 +376,7 @@ func appendContentChanges(fields []*mm_model.SlackAttachmentField, cardDiff *Dif
 
 		fields = append(fields, &mm_model.SlackAttachmentField{
 			Short: false,
-			Title: "Description",
+			Title: "설명",
 			Value: markdown,
 		})
 	}
