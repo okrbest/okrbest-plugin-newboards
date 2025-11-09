@@ -238,6 +238,8 @@ const Kanban = (props: Props) => {
                         intl={props.intl}
                         groupByProperty={groupByProperty}
                         addCard={props.addCard}
+                        addCardFromTemplate={props.addCardFromTemplate}
+                        defaultTemplateID={defaultTemplateID}
                         readonly={props.readonly}
                         propertyNameChanged={propertyNameChanged}
                         onDropToColumn={onDropToColumn}

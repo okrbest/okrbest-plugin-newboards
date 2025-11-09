@@ -33,6 +33,8 @@ type Props = {
     intl: IntlShape
     readonly: boolean
     addCard: (groupByOptionId?: string, show?: boolean) => Promise<void>
+    addCardFromTemplate: (cardTemplateId: string, groupByOptionId?: string) => void
+    defaultTemplateID?: string
     propertyNameChanged: (option: IPropertyOption, text: string) => Promise<void>
     onDropToColumn: (srcOption: IPropertyOption, card?: Card, dstOption?: IPropertyOption) => void
     calculationMenuOpen: boolean
@@ -195,7 +197,11 @@ export default function KanbanColumnHeader(props: Props): JSX.Element {
                         <IconButton
                             icon={<AddIcon/>}
                             onClick={() => {
-                                props.addCard(group.option.id, true)
+                                if (props.defaultTemplateID) {
+                                    props.addCardFromTemplate(props.defaultTemplateID, group.option.id)
+                                } else {
+                                    props.addCard(group.option.id, true)
+                                }
                             }}
                         />
                     </BoardPermissionGate>
