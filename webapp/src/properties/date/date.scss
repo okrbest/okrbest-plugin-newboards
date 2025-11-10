@@ -219,4 +219,28 @@
     .DayPicker:not(.DayPicker--interactionDisabled) .DayPicker-Day:not(.DayPicker-Day--disabled):not(.DayPicker-Day--selected):not(.DayPicker-Day--outside):hover {
         background-color: rgba(var(--body-color), 0.2);
     }
+
+    .timeContainer {
+        display: flex;
+        margin-top: 8px;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .timeField {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+    }
+
+    .timeLabel {
+        font-size: 12px;
+        line-height: 16px;
+        color: rgba(var(--center-channel-color-rgb), 0.56);
+        margin-bottom: 4px;
+    }
+
+    .timeField .Editable {
+        width: 100% !important;
+    }
 }

@@ -28,19 +28,26 @@ export default class DateProperty extends DatePropertyType {
     displayValue = (propertyValue: string | string[] | undefined, _1: Card, _2: IPropertyTemplate, intl: IntlShape) => {
         let displayValue = ''
         if (propertyValue && typeof propertyValue === 'string') {
-            const singleDate = new Date(parseInt(propertyValue, 10))
-            if (singleDate && DateUtils.isDate(singleDate)) {
-                displayValue = Utils.displayDate(new Date(parseInt(propertyValue, 10)), intl)
+            const numericValue = parseInt(propertyValue, 10)
+            if (!Number.isNaN(numericValue) && numericValue.toString() === propertyValue) {
+                const singleDate = new Date(numericValue)
+                if (singleDate && DateUtils.isDate(singleDate)) {
+                    displayValue = Utils.displayDate(singleDate, intl)
+                }
             } else {
                 try {
                     const dateValue = JSON.parse(propertyValue as string)
+                    const includeTime = Boolean(dateValue.includeTime)
+                    const segments: string[] = []
                     if (dateValue.from) {
-                        displayValue = Utils.displayDate(new Date(dateValue.from), intl)
+                        const fromDate = new Date(dateValue.from)
+                        segments.push(includeTime ? Utils.displayDateTime(fromDate, intl) : Utils.displayDate(fromDate, intl))
                     }
                     if (dateValue.to) {
-                        displayValue += ' -> '
-                        displayValue += Utils.displayDate(new Date(dateValue.to), intl)
+                        const toDate = new Date(dateValue.to)
+                        segments.push(includeTime ? Utils.displayDateTime(toDate, intl) : Utils.displayDate(toDate, intl))
                     }
+                    displayValue = segments.join(' -> ')
                 } catch {
                     // do nothing
                 }
