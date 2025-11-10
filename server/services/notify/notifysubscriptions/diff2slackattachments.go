@@ -30,7 +30,14 @@ var (
 	// templateCache is a map of text templateCache keyed by languange code.
 	templateCache    = make(map[string]*template.Template)
 	templateCacheMux sync.Mutex
+	mentionPattern   = regexp.MustCompile(`@[a-zA-Z0-9_\-]+`)
 )
+
+func isMentionOnly(s string) bool {
+	clean := mentionPattern.ReplaceAllString(s, "")
+	clean = strings.TrimSpace(clean)
+	return clean == ""
+}
 
 // DiffConvOpts provides options when converting diffs to slack attachments.
 type DiffConvOpts struct {
@@ -194,8 +201,8 @@ func cardDiff2SlackAttachment(cardDiff *Diff, opts DiffConvOpts) (*mm_model.Slac
 	// property changes
 	attachment.Fields = appendPropertyChanges(attachment.Fields, cardDiff)
 
-	// comment add/delete - 멘션 알림과 중복되므로 제외
-	// attachment.Fields = appendCommentChanges(attachment.Fields, cardDiff)
+	// comment add/delete (멘션만 포함된 댓글은 멘션 알림으로 대체됨)
+	attachment.Fields = appendCommentChanges(attachment.Fields, cardDiff)
 
 	// File Attachment add/delete
 	attachment.Fields = appendAttachmentChanges(attachment.Fields, cardDiff)
@@ -251,16 +258,28 @@ func appendCommentChanges(fields []*mm_model.SlackAttachmentField, cardDiff *Dif
 		if child.BlockType == model.TypeComment {
 			var format string
 			var msg string
+			isAdd := false
 			if child.NewBlock != nil && child.OldBlock == nil {
 				// added comment
 				format = "%s"
 				msg = child.NewBlock.Title
+				isAdd = true
 			}
 
 			if (child.NewBlock == nil || child.NewBlock.DeleteAt != 0) && child.OldBlock != nil {
 				// deleted comment
 				format = "~~`%s`~~"
 				msg = stripNewlines(child.OldBlock.Title)
+			}
+
+			// 새 댓글이 멘션만 포함하는 경우 멘션 알림과 중복되므로 제외
+			if isAdd && isMentionOnly(msg) {
+				continue
+			}
+
+			// 삭제된 댓글도 멘션만 포함했다면 알림 제외
+			if !isAdd && format != "" && isMentionOnly(msg) {
+				continue
 			}
 
 			if format != "" {
@@ -366,12 +385,13 @@ func appendContentChanges(fields []*mm_model.SlackAttachmentField, cardDiff *Dif
 
 		// 실제 멘션 패턴이 포함된 Description 변경은 멘션 알림과 중복되므로 제외
 		// 패턴: @username (@ 뒤에 영문자/숫자/언더스코어/하이픈)
-		mentionPattern := regexp.MustCompile(`@[a-zA-Z0-9_\-]+`)
 		if mentionPattern.MatchString(newTitle) || mentionPattern.MatchString(oldTitle) {
-			logger.Debug("appendContentChanges - skipping description with mention",
-				mlog.String("type", string(child.BlockType)),
-			)
-			continue
+			if isMentionOnly(newTitle) && isMentionOnly(oldTitle) {
+				logger.Debug("appendContentChanges - skipping description with mention",
+					mlog.String("type", string(child.BlockType)),
+				)
+				continue
+			}
 		}
 
 		fields = append(fields, &mm_model.SlackAttachmentField{
