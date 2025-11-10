@@ -174,7 +174,12 @@ function DateRange(props: PropertyProps): JSX.Element {
     }
 
     const saveRangeValue = (range: DateProperty, nextIncludeTime: boolean) => {
-        const rangeUTC: DateProperty = {...range, includeTime: nextIncludeTime}
+        const rangeUTC: DateProperty = {...range}
+        if (nextIncludeTime) {
+            rangeUTC.includeTime = true
+        } else {
+            delete rangeUTC.includeTime
+        }
         if (rangeUTC.from) {
             rangeUTC.from -= nextIncludeTime ? 0 : timeZoneOffset(rangeUTC.from)
         }

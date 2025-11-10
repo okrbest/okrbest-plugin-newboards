@@ -153,20 +153,30 @@ func (pd PropDef) GetValue(v interface{}, resolver PropValueResolver) (string, e
 }
 
 func (pd PropDef) ParseDate(s string) (string, error) {
-	// s is a JSON snippet of the form: {"from":1642161600000, "to":1642161600000} in milliseconds UTC
-	// The UI does not yet support date ranges.
-	var m map[string]int64
-	if err := json.Unmarshal([]byte(s), &m); err != nil {
+	// s is a JSON snippet of the form:
+	// {"from":1642161600000, "to":1642161600000, "includeTime":true} in milliseconds UTC
+	type dateValue struct {
+		From        *int64 `json:"from"`
+		To          *int64 `json:"to"`
+		IncludeTime bool   `json:"includeTime"`
+	}
+
+	var value dateValue
+	if err := json.Unmarshal([]byte(s), &value); err != nil {
 		return s, err
 	}
-	tsFrom, ok := m["from"]
-	if !ok {
+	if value.From == nil {
 		return s, ErrInvalidDate
 	}
-	date := utils.GetTimeForMillis(tsFrom).Format("January 02, 2006")
-	tsTo, ok := m["to"]
-	if ok {
-		date += " -> " + utils.GetTimeForMillis(tsTo).Format("January 02, 2006")
+
+	layout := "January 02, 2006"
+	if value.IncludeTime {
+		layout = "January 02, 2006 15:04"
+	}
+
+	date := utils.GetTimeForMillis(*value.From).Format(layout)
+	if value.To != nil {
+		date += " -> " + utils.GetTimeForMillis(*value.To).Format(layout)
 	}
 	return date, nil
 }
