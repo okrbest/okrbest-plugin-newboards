@@ -340,8 +340,7 @@ func (s *SQLStore) searchUsersByTeam(db sq.BaseRunner, teamID string, searchQuer
 			sq.Like{"LOWER(u.lastname)": "%" + strings.ToLower(searchQuery) + "%"},
 			sq.Like{fullNameField: "%" + strings.ToLower(searchQuery) + "%"},
 		}).
-		OrderBy("u.username").
-		Limit(10)
+		OrderBy("u.username")
 
 	if excludeBots {
 		query = query.
