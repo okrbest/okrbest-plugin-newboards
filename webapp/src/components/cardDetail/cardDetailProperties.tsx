@@ -24,6 +24,9 @@ import {Permission} from '../../constants'
 import {useHasCurrentBoardPermissions} from '../../hooks/permissions'
 import propRegistry from '../../properties'
 import {PropertyType} from '../../properties/types'
+import {useAppDispatch} from '../../store/hooks'
+import {updateBoards} from '../../store/boards'
+import {updateViews} from '../../store/views'
 
 type Props = {
     board: Board
@@ -36,6 +39,7 @@ type Props = {
 
 const CardDetailProperties = (props: Props) => {
     const {board, card, cards, views, activeView} = props
+    const dispatch = useAppDispatch()
     const [newTemplateId, setNewTemplateId] = useState('')
     const canEditBoardProperties = useHasCurrentBoardPermissions([Permission.ManageBoardProperties])
     const canEditBoardCards = useHasCurrentBoardPermissions([Permission.ManageBoardCards])
@@ -144,8 +148,15 @@ const CardDetailProperties = (props: Props) => {
         Utils.arrayMove(reorderedTemplates, currentIndex, destIndex)
         const reorderedIds = reorderedTemplates.map((template) => template.id)
 
+        const updatedBoard = {
+            ...board,
+            cardProperties: reorderedTemplates,
+        }
+        dispatch(updateBoards([updatedBoard]))
+
         void mutator.changePropertyTemplateOrder(board, propertyTemplate, destIndex)
 
+        const updatedViews: BoardView[] = []
         views.forEach((view) => {
             const oldVisiblePropertyIds = view.fields.visiblePropertyIds
             if (!oldVisiblePropertyIds.includes(propertyTemplate.id)) {
@@ -154,9 +165,21 @@ const CardDetailProperties = (props: Props) => {
 
             const newVisiblePropertyIds = reorderedIds.filter((id) => oldVisiblePropertyIds.includes(id))
             if (!Utils.arraysEqual(oldVisiblePropertyIds, newVisiblePropertyIds)) {
+                const newView = {
+                    ...view,
+                    fields: {
+                        ...view.fields,
+                        visiblePropertyIds: newVisiblePropertyIds,
+                    },
+                }
+                updatedViews.push(newView)
                 void mutator.changeViewVisibleProperties(board.id, view.id, oldVisiblePropertyIds, newVisiblePropertyIds, 'reorder properties')
             }
         })
+
+        if (updatedViews.length) {
+            dispatch(updateViews(updatedViews))
+        }
     }
 
     return (

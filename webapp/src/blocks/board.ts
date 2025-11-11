@@ -98,6 +98,7 @@ interface IPropertyTemplate {
     name: string
     type: PropertyTypeEnum
     options: IPropertyOption[]
+    index?: number
 }
 
 function createBoard(board?: Board): Board {
@@ -153,19 +154,7 @@ type BoardGroup = {
     cards: Card[]
 }
 
-// getPropertiesDifference returns a list of the property IDs that are
-// contained in propsA but are not contained in propsB
-function getPropertiesDifference(propsA: IPropertyTemplate[], propsB: IPropertyTemplate[]): string[] {
-    const diff: string[] = []
-    propsA.forEach((val) => {
-        if (!propsB.find((p) => p.id === val.id)) {
-            diff.push(val.id)
-        }
-    })
-
-    return diff
-}
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // isPropertyEqual checks that both the contents of the property and
 // its options are equal
 function isPropertyEqual(propA: IPropertyTemplate, propB: IPropertyTemplate): boolean {
@@ -199,20 +188,67 @@ function isPropertyEqual(propA: IPropertyTemplate, propB: IPropertyTemplate): bo
 // contains the delta to update the board cardProperties and another one for
 // the undo action, in case it happens
 function createCardPropertiesPatches(newCardProperties: IPropertyTemplate[], oldCardProperties: IPropertyTemplate[]): BoardPatch[] {
-    const newDeletedCardProperties = getPropertiesDifference(newCardProperties, oldCardProperties)
-    const oldDeletedCardProperties = getPropertiesDifference(oldCardProperties, newCardProperties)
+    const newIds = newCardProperties.map((prop) => prop.id)
+    const oldIds = oldCardProperties.map((prop) => prop.id)
+
+    const arraysEqual = (a: string[], b: string[]): boolean => {
+        if (a.length !== b.length) {
+            return false
+        }
+        for (let i = 0; i < a.length; i++) {
+            if (a[i] !== b[i]) {
+                return false
+            }
+        }
+        return true
+    }
+
+    const withIndex = (props: IPropertyTemplate[]): IPropertyTemplate[] => props.map((prop, index) => ({
+        ...prop,
+        index,
+    }))
+
+    const newIdsSet = new Set<string>(newIds)
+    const oldIdsSet = new Set<string>(oldIds)
+
+    const deletedInNew = oldCardProperties.filter((prop) => !newIdsSet.has(prop.id)).map((prop) => prop.id)
+    const deletedInOld = newCardProperties.filter((prop) => !oldIdsSet.has(prop.id)).map((prop) => prop.id)
+
+    const orderChanged = !arraysEqual(newIds, oldIds)
+
+    if (orderChanged) {
+        return [
+            {
+                updatedCardProperties: withIndex(newCardProperties),
+                deletedCardProperties: deletedInNew,
+            },
+            {
+                updatedCardProperties: withIndex(oldCardProperties),
+                deletedCardProperties: deletedInOld,
+            },
+        ]
+    }
+
+    const newDeletedCardProperties = deletedInNew
+    const oldDeletedCardProperties = deletedInOld
     const newUpdatedCardProperties: IPropertyTemplate[] = []
-    newCardProperties.forEach((val) => {
+    newCardProperties.forEach((val, index) => {
         const oldCardProperty = oldCardProperties.find((o) => o.id === val.id)
         if (!oldCardProperty || !isPropertyEqual(val, oldCardProperty)) {
-            newUpdatedCardProperties.push(val)
+            newUpdatedCardProperties.push({
+                ...val,
+                index,
+            })
         }
     })
     const oldUpdatedCardProperties: IPropertyTemplate[] = []
-    oldCardProperties.forEach((val) => {
+    oldCardProperties.forEach((val, index) => {
         const newCardProperty = newCardProperties.find((o) => o.id === val.id)
         if (!newCardProperty || !isPropertyEqual(val, newCardProperty)) {
-            oldUpdatedCardProperties.push(val)
+            oldUpdatedCardProperties.push({
+                ...val,
+                index,
+            })
         }
     })
 
@@ -333,3 +369,4 @@ export {
     createPatchesFromBoardsAndBlocks,
     createCardPropertiesPatches,
 }
+/* eslint-enable @typescript-eslint/no-explicit-any */

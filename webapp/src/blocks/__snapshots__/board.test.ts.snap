@@ -109,7 +109,54 @@ Array [
     "deletedProperties": Array [],
     "updatedCardProperties": Array [
       Object {
+        "id": "[id]",
+        "index": 0,
+        "name": "Status",
+        "options": Array [],
+        "type": "select",
+      },
+      Object {
+        "id": "property1",
+        "index": 1,
+        "name": "Property 1",
+        "options": Array [
+          Object {
+            "color": "propColorBrown",
+            "id": "value1",
+            "value": "value 1",
+          },
+        ],
+        "type": "select",
+      },
+      Object {
+        "id": "property2",
+        "index": 2,
+        "name": "Property 2",
+        "options": Array [
+          Object {
+            "color": "propColorBrown",
+            "id": "value1",
+            "value": "value 1",
+          },
+        ],
+        "type": "select",
+      },
+      Object {
+        "id": "property3",
+        "index": 3,
+        "name": "Property 3",
+        "options": Array [
+          Object {
+            "color": "propColorBrown",
+            "id": "value1",
+            "value": "value 1",
+          },
+        ],
+        "type": "select",
+      },
+      Object {
         "id": "new-property-id",
+        "index": 4,
         "name": "property-name",
         "options": Array [
           Object {
@@ -128,7 +175,54 @@ Array [
       "new-property-id",
     ],
     "deletedProperties": Array [],
-    "updatedCardProperties": Array [],
+    "updatedCardProperties": Array [
+      Object {
+        "id": "[id]",
+        "index": 0,
+        "name": "Status",
+        "options": Array [],
+        "type": "select",
+      },
+      Object {
+        "id": "property1",
+        "index": 1,
+        "name": "Property 1",
+        "options": Array [
+          Object {
+            "color": "propColorBrown",
+            "id": "value1",
+            "value": "value 1",
+          },
+        ],
+        "type": "select",
+      },
+      Object {
+        "id": "property2",
+        "index": 2,
+        "name": "Property 2",
+        "options": Array [
+          Object {
+            "color": "propColorBrown",
+            "id": "value1",
+            "value": "value 1",
+          },
+        ],
+        "type": "select",
+      },
+      Object {
+        "id": "property3",
+        "index": 3,
+        "name": "Property 3",
+        "options": Array [
+          Object {
+            "color": "propColorBrown",
+            "id": "value1",
+            "value": "value 1",
+          },
+        ],
+        "type": "select",
+      },
+    ],
     "updatedProperties": Object {},
   },
 ]
@@ -142,6 +236,7 @@ Array [
     "updatedCardProperties": Array [
       Object {
         "id": "new-property-id",
+        "index": 0,
         "name": "property-name",
         "options": Array [
           Object {
@@ -161,6 +256,7 @@ Array [
     "updatedCardProperties": Array [
       Object {
         "id": "new-property-id",
+        "index": 0,
         "name": "a-different-name",
         "options": Array [
           Object {
@@ -185,6 +281,7 @@ Array [
     "updatedCardProperties": Array [
       Object {
         "id": "new-property-id",
+        "index": 0,
         "name": "property-name",
         "options": Array [
           Object {
@@ -204,6 +301,7 @@ Array [
     "updatedCardProperties": Array [
       Object {
         "id": "new-property-id",
+        "index": 0,
         "name": "property-name",
         "options": Array [
           Object {

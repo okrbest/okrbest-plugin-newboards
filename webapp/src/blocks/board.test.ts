@@ -6,12 +6,51 @@ import {TestBlockFactory} from '../test/testBlockFactory'
 import {createPatchesFromBoards, createBoard, IPropertyTemplate, createPatchesFromBoardsAndBlocks} from './board'
 import {createBlock} from './block'
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+const sanitizeId = (value: string): string => {
+    if (!value) {
+        return value
+    }
+    if (value === 'new-property-id' || value.startsWith('property')) {
+        return value
+    }
+    return '[id]'
+}
+
+const sanitizeUpdatedCardProperties = (props: any[] = []): any[] => props.map((prop) => {
+    const {options, id, ...rest} = prop
+    const sanitizedOptions = (options || []).map((option: any) => {
+        const {id: optionId, ...optionRest} = option
+        return {
+            ...optionRest,
+            id: optionId,
+        }
+    })
+    return {
+        ...rest,
+        id: sanitizeId(id),
+        options: sanitizedOptions,
+    }
+})
+
+const sanitizeBoardPatches = (patches: any[]): any[] => patches.map((patch) => ({
+    ...patch,
+    updatedCardProperties: sanitizeUpdatedCardProperties(patch.updatedCardProperties),
+    deletedCardProperties: (patch.deletedCardProperties || []).map((id: string) => sanitizeId(id)),
+}))
+
+const sanitizeBoardsAndBlocksPatches = (patches: any[]): any[] => patches.map((patch) => ({
+    ...patch,
+    boardPatches: sanitizeBoardPatches(patch.boardPatches || []),
+}))
+
 describe('board tests', () => {
     describe('correctly generate patches from two boards', () => {
         it('should generate two empty patches for the same board', () => {
             const board = TestBlockFactory.createBoard()
             const result = createPatchesFromBoards(board, board)
-            expect(result).toMatchSnapshot()
+            expect(sanitizeBoardPatches(result)).toMatchSnapshot()
         })
 
         it('should add properties on the update patch and remove them on the undo', () => {
@@ -26,7 +65,7 @@ describe('board tests', () => {
             }
 
             const result = createPatchesFromBoards(board, oldBoard)
-            expect(result).toMatchSnapshot()
+            expect(sanitizeBoardPatches(result)).toMatchSnapshot()
         })
 
         it('should add card properties on the redo and remove them on the undo', () => {
@@ -44,7 +83,7 @@ describe('board tests', () => {
             })
 
             const result = createPatchesFromBoards(board, oldBoard)
-            expect(result).toMatchSnapshot()
+            expect(sanitizeBoardPatches(result)).toMatchSnapshot()
         })
 
         it('should add card properties on the redo and undo if they exists in both, but differ', () => {
@@ -65,7 +104,7 @@ describe('board tests', () => {
             oldBoard.cardProperties = [{...cardProperty, name: 'a-different-name'}]
 
             const result = createPatchesFromBoards(board, oldBoard)
-            expect(result).toMatchSnapshot()
+            expect(sanitizeBoardPatches(result)).toMatchSnapshot()
         })
 
         it('should add card properties on the redo and undo if they exists in both, but their options are different', () => {
@@ -93,7 +132,7 @@ describe('board tests', () => {
             }]
 
             const result = createPatchesFromBoards(board, oldBoard)
-            expect(result).toMatchSnapshot()
+            expect(sanitizeBoardPatches(result)).toMatchSnapshot()
         })
     })
 
@@ -105,7 +144,7 @@ describe('board tests', () => {
 
         it('should generate two empty patches for the same board and block', () => {
             const result = createPatchesFromBoardsAndBlocks(board, board, [card.id], [card], [card])
-            expect(result).toMatchSnapshot()
+            expect(sanitizeBoardsAndBlocksPatches(result)).toMatchSnapshot()
         })
 
         it('should add fields on update and remove it in the undo', () => {
@@ -115,7 +154,9 @@ describe('board tests', () => {
             newBlock.fields.newField = 'new field'
 
             const result = createPatchesFromBoardsAndBlocks(board, board, [newBlock.id], [newBlock], [oldBlock])
-            expect(result).toMatchSnapshot()
+            expect(sanitizeBoardsAndBlocksPatches(result)).toMatchSnapshot()
         })
     })
 })
+
+/* eslint-enable @typescript-eslint/no-explicit-any */

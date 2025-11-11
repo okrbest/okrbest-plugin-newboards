@@ -6,6 +6,7 @@ package model
 import (
 	"encoding/json"
 	"io"
+	"sort"
 	"time"
 
 	mmModel "github.com/mattermost/mattermost/server/public/model"
@@ -341,12 +342,48 @@ func (p *BoardPatch) Patch(board *Board) *Board {
 			cardPropertyMap[id] = newprop
 		}
 
-		// and finally we flatten and save the updated properties
+		type orderedProperty struct {
+			id    string
+			index int
+		}
+
+		reordered := false
+		orderedList := []orderedProperty{}
+		for id, prop := range cardPropertyMap {
+			if idxValue, ok := prop["index"]; ok {
+				switch idx := idxValue.(type) {
+				case float64:
+					reordered = true
+					orderedList = append(orderedList, orderedProperty{id: id, index: int(idx)})
+				case int:
+					reordered = true
+					orderedList = append(orderedList, orderedProperty{id: id, index: idx})
+				}
+			}
+		}
+
 		newCardProperties := []map[string]interface{}{}
-		for _, key := range keyOrder {
-			p, exists := cardPropertyMap[key]
-			if exists {
-				newCardProperties = append(newCardProperties, p)
+		if reordered {
+			sort.SliceStable(orderedList, func(i, j int) bool {
+				if orderedList[i].index == orderedList[j].index {
+					return orderedList[i].id < orderedList[j].id
+				}
+				return orderedList[i].index < orderedList[j].index
+			})
+
+			for _, item := range orderedList {
+				if prop, exists := cardPropertyMap[item.id]; exists {
+					delete(prop, "index")
+					newCardProperties = append(newCardProperties, prop)
+				}
+			}
+		} else {
+			for _, key := range keyOrder {
+				p, exists := cardPropertyMap[key]
+				if exists {
+					delete(p, "index")
+					newCardProperties = append(newCardProperties, p)
+				}
 			}
 		}
 
