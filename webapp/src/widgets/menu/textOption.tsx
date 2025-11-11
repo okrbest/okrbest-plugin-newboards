@@ -33,9 +33,12 @@ function TextOption(props: TextOptionProps): JSX.Element {
             aria-label={name}
             className={className}
             onClick={(e: React.MouseEvent) => {
+                e.stopPropagation()
+                if (disabled) {
+                    return
+                }
                 e.target.dispatchEvent(new Event('menuItemClicked'))
                 props.onClick(props.id)
-                e.stopPropagation()
             }}
         >
             <div className={`${check ? 'd-flex menu-option__check' : 'd-flex'}`}>{icon ? <div className='menu-option__icon'>{icon}</div> : <div className='noicon'/>}</div>

@@ -16,15 +16,29 @@ describe('widgets/PropertyMenu', () => {
         // Quick fix to disregard console error when unmounting a component
         console.error = jest.fn()
         document.execCommand = jest.fn()
+        baseProps.onTypeAndNameChanged.mockClear()
+        baseProps.onDelete.mockClear()
+        baseProps.onMoveUp.mockClear()
+        baseProps.onMoveDown.mockClear()
     })
+
+    const baseProps = {
+        propertyId: 'id',
+        propertyName: 'email of a person',
+        propertyType: propsRegistry.get('email'),
+        onTypeAndNameChanged: jest.fn(),
+        onDelete: jest.fn(),
+        onMoveUp: jest.fn(),
+        onMoveDown: jest.fn(),
+        canMoveUp: true,
+        canMoveDown: true,
+    }
 
     test('should display the type of property', () => {
         const callback = jest.fn()
         const component = wrapIntl(
             <PropertyMenu
-                propertyId={'id'}
-                propertyName={'email of a person'}
-                propertyType={propsRegistry.get('email')}
+                {...baseProps}
                 onTypeAndNameChanged={callback}
                 onDelete={callback}
             />,
@@ -37,9 +51,7 @@ describe('widgets/PropertyMenu', () => {
         const callback = jest.fn()
         const component = wrapIntl(
             <PropertyMenu
-                propertyId={'id'}
-                propertyName={'email of a person'}
-                propertyType={propsRegistry.get('email')}
+                {...baseProps}
                 onTypeAndNameChanged={callback}
                 onDelete={callback}
             />,
@@ -53,11 +65,10 @@ describe('widgets/PropertyMenu', () => {
         const callback = jest.fn()
         const component = wrapIntl(
             <PropertyMenu
-                propertyId={'id'}
+                {...baseProps}
                 propertyName={'test-property'}
                 propertyType={propsRegistry.get('text')}
                 onTypeAndNameChanged={callback}
-                onDelete={callback}
             />,
         )
         const {getByDisplayValue} = render(component)
@@ -71,11 +82,10 @@ describe('widgets/PropertyMenu', () => {
         const callback = jest.fn()
         const component = wrapIntl(
             <PropertyMenu
-                propertyId={'id'}
+                {...baseProps}
                 propertyName={'test-property'}
                 propertyType={propsRegistry.get('text')}
                 onTypeAndNameChanged={callback}
-                onDelete={callback}
             />,
         )
         const {getByText} = render(component)
@@ -89,11 +99,10 @@ describe('widgets/PropertyMenu', () => {
         const callback = jest.fn()
         const component = wrapIntl(
             <PropertyMenu
-                propertyId={'id'}
+                {...baseProps}
                 propertyName={'test-property'}
                 propertyType={propsRegistry.get('text')}
                 onTypeAndNameChanged={callback}
-                onDelete={callback}
             />,
         )
         const {getByDisplayValue, getByText} = render(component)
@@ -110,16 +119,34 @@ describe('widgets/PropertyMenu', () => {
         const callback = jest.fn()
         const component = wrapIntl(
             <PropertyMenu
-                propertyId={'id'}
+                {...baseProps}
                 propertyName={'test-property'}
                 propertyType={propsRegistry.get('text')}
                 onTypeAndNameChanged={callback}
-                onDelete={callback}
             />,
         )
         const {container, getByText} = render(component)
         const menuOpen = getByText(/Type: Text/i)
         fireEvent.click(menuOpen)
         expect(container).toMatchSnapshot()
+    })
+
+    test('handles move up/down events respecting disabled state', () => {
+        const onMoveUp = jest.fn()
+        const onMoveDown = jest.fn()
+        const component = wrapIntl(
+            <PropertyMenu
+                {...baseProps}
+                onMoveUp={onMoveUp}
+                onMoveDown={onMoveDown}
+                canMoveUp={false}
+                canMoveDown={true}
+            />,
+        )
+        const {getByText} = render(component)
+        fireEvent.click(getByText(/Move property up/i))
+        expect(onMoveUp).not.toHaveBeenCalled()
+        fireEvent.click(getByText(/Move property down/i))
+        expect(onMoveDown).toHaveBeenCalledTimes(1)
     })
 })

@@ -129,9 +129,39 @@ const CardDetailProperties = (props: Props) => {
         setShowConfirmationDialog(true)
     }
 
+    const moveProperty = (propertyTemplate: IPropertyTemplate, direction: 'up' | 'down') => {
+        const currentIndex = board.cardProperties.findIndex((template) => template.id === propertyTemplate.id)
+        if (currentIndex === -1) {
+            return
+        }
+
+        const destIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
+        if (destIndex < 0 || destIndex >= board.cardProperties.length) {
+            return
+        }
+
+        const reorderedTemplates = board.cardProperties.slice()
+        Utils.arrayMove(reorderedTemplates, currentIndex, destIndex)
+        const reorderedIds = reorderedTemplates.map((template) => template.id)
+
+        void mutator.changePropertyTemplateOrder(board, propertyTemplate, destIndex)
+
+        views.forEach((view) => {
+            const oldVisiblePropertyIds = view.fields.visiblePropertyIds
+            if (!oldVisiblePropertyIds.includes(propertyTemplate.id)) {
+                return
+            }
+
+            const newVisiblePropertyIds = reorderedIds.filter((id) => oldVisiblePropertyIds.includes(id))
+            if (!Utils.arraysEqual(oldVisiblePropertyIds, newVisiblePropertyIds)) {
+                void mutator.changeViewVisibleProperties(board.id, view.id, oldVisiblePropertyIds, newVisiblePropertyIds, 'reorder properties')
+            }
+        })
+    }
+
     return (
         <div className='octo-propertylist CardDetailProperties'>
-            {board.cardProperties.map((propertyTemplate: IPropertyTemplate) => {
+            {board.cardProperties.map((propertyTemplate: IPropertyTemplate, index: number) => {
                 return (
                     <div
                         key={propertyTemplate.id + '-' + propertyTemplate.type}
@@ -147,6 +177,10 @@ const CardDetailProperties = (props: Props) => {
                                     propertyType={propRegistry.get(propertyTemplate.type)}
                                     onTypeAndNameChanged={(newType: PropertyType, newName: string) => onPropertyChangeSetAndOpenConfirmationDialog(newType, newName, propertyTemplate)}
                                     onDelete={() => onPropertyDeleteSetAndOpenConfirmationDialog(propertyTemplate)}
+                                    onMoveUp={() => moveProperty(propertyTemplate, 'up')}
+                                    onMoveDown={() => moveProperty(propertyTemplate, 'down')}
+                                    canMoveUp={index > 0}
+                                    canMoveDown={index < board.cardProperties.length - 1}
                                 />
                             </MenuWrapper>
                         }

@@ -238,6 +238,8 @@
   "PersonProperty.me": "본인",
   "PersonProperty.non-board-members": "보드 멤버가 아님",
   "PropertyMenu.Delete": "삭제",
+  "PropertyMenu.MoveDown": "속성을 아래로 이동",
+  "PropertyMenu.MoveUp": "속성을 위로 이동",
   "PropertyMenu.changeType": "속성 유형 변경",
   "PropertyMenu.selectType": "속성 유형 선택",
   "PropertyMenu.typeTitle": "유형",

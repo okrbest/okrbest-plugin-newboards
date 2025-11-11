@@ -15,6 +15,10 @@ type Props = {
     propertyType: PropertyType
     onTypeAndNameChanged: (newType: PropertyType, newName: string) => void
     onDelete: (id: string) => void
+    onMoveUp: () => void
+    onMoveDown: () => void
+    canMoveUp: boolean
+    canMoveDown: boolean
 }
 
 function typeMenuTitle(intl: IntlShape, type: PropertyType): string {
@@ -58,6 +62,14 @@ const PropertyMenu = (props: Props) => {
         id: 'PropertyMenu.Delete',
         defaultMessage: 'Delete',
     })
+    const moveUpText = intl.formatMessage({
+        id: 'PropertyMenu.MoveUp',
+        defaultMessage: 'Move property up',
+    })
+    const moveDownText = intl.formatMessage({
+        id: 'PropertyMenu.MoveDown',
+        defaultMessage: 'Move property down',
+    })
 
     return (
         <Menu>
@@ -80,6 +92,27 @@ const PropertyMenu = (props: Props) => {
                     onTypeSelected={(type: PropertyType) => props.onTypeAndNameChanged(type, currentPropertyName)}
                 />
             </Menu.SubMenu>
+            <Menu.Text
+                id='move-up'
+                name={moveUpText}
+                disabled={!props.canMoveUp}
+                onClick={() => {
+                    if (props.canMoveUp) {
+                        props.onMoveUp()
+                    }
+                }}
+            />
+            <Menu.Text
+                id='move-down'
+                name={moveDownText}
+                disabled={!props.canMoveDown}
+                onClick={() => {
+                    if (props.canMoveDown) {
+                        props.onMoveDown()
+                    }
+                }}
+            />
+            <Menu.Separator/>
             <Menu.Text
                 id='delete'
                 name={deleteText}
