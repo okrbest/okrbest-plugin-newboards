@@ -236,7 +236,6 @@ Array [
     "updatedCardProperties": Array [
       Object {
         "id": "new-property-id",
-        "index": 0,
         "name": "property-name",
         "options": Array [
           Object {
@@ -256,7 +255,6 @@ Array [
     "updatedCardProperties": Array [
       Object {
         "id": "new-property-id",
-        "index": 0,
         "name": "a-different-name",
         "options": Array [
           Object {
@@ -281,7 +279,6 @@ Array [
     "updatedCardProperties": Array [
       Object {
         "id": "new-property-id",
-        "index": 0,
         "name": "property-name",
         "options": Array [
           Object {

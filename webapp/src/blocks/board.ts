@@ -232,23 +232,17 @@ function createCardPropertiesPatches(newCardProperties: IPropertyTemplate[], old
     const newDeletedCardProperties = deletedInNew
     const oldDeletedCardProperties = deletedInOld
     const newUpdatedCardProperties: IPropertyTemplate[] = []
-    newCardProperties.forEach((val, index) => {
+    newCardProperties.forEach((val) => {
         const oldCardProperty = oldCardProperties.find((o) => o.id === val.id)
         if (!oldCardProperty || !isPropertyEqual(val, oldCardProperty)) {
-            newUpdatedCardProperties.push({
-                ...val,
-                index,
-            })
+            newUpdatedCardProperties.push(val)
         }
     })
     const oldUpdatedCardProperties: IPropertyTemplate[] = []
-    oldCardProperties.forEach((val, index) => {
+    oldCardProperties.forEach((val) => {
         const newCardProperty = newCardProperties.find((o) => o.id === val.id)
         if (!newCardProperty || !isPropertyEqual(val, newCardProperty)) {
-            oldUpdatedCardProperties.push({
-                ...val,
-                index,
-            })
+            oldUpdatedCardProperties.push(val)
         }
     })
 
