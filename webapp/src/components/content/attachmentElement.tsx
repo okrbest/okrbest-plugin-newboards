@@ -39,7 +39,9 @@ const AttachmentElement = (props: Props): JSX.Element|null => {
     const [fileIcon, setFileIcon] = useState<string>('file-text-outline-larg')
     const [fileName, setFileName] = useState<string>()
     const [showConfirmationDialogBox, setShowConfirmationDialogBox] = useState<boolean>(false)
-    const uploadPercent = useAppSelector(getUploadPercent(block.id))
+    const uploadPercent = useAppSelector(
+        block.isUploading ? getUploadPercent(block.id) : () => 0
+    )
     const intl = useIntl()
 
     useEffect(() => {

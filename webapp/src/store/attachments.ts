@@ -46,7 +46,10 @@ const attachmentSlice = createSlice({
             }
         },
         updateUploadPrecent: (state, action: PayloadAction<{blockId: string, uploadPercent: number}>) => {
-            state.attachments[action.payload.blockId].uploadingPercent = action.payload.uploadPercent
+            const attachment = state.attachments[action.payload.blockId]
+            if (attachment) {
+                attachment.uploadingPercent = action.payload.uploadPercent
+            }
         },
     },
     extraReducers: (builder) => {
@@ -88,6 +91,11 @@ export function getCardAttachments(cardId: string): (state: RootState) => Attach
 
 export function getUploadPercent(blockId: string): (state: RootState) => number {
     return (state: RootState): number => {
-        return (state.attachments.attachments[blockId].uploadingPercent)
+        const attachment = state.attachments.attachments[blockId]
+        if (!attachment) {
+            return 0
+        }
+
+        return attachment.uploadingPercent ?? 0
     }
 }
