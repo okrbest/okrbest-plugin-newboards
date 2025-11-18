@@ -350,7 +350,8 @@ func (s *SQLStore) searchUsersByTeam(db sq.BaseRunner, teamID string, searchQuer
 	if asGuestID == "" {
 		query = query.
 			Join("TeamMembers as tm ON tm.UserID = u.id").
-			Where(sq.Eq{"tm.TeamId": teamID})
+			Where(sq.Eq{"tm.TeamId": teamID}).
+			Where(sq.Eq{"tm.deleteAt": 0})
 	} else {
 		boards, err := s.getBoardsForUserAndTeam(db, asGuestID, teamID, false)
 		if err != nil {
