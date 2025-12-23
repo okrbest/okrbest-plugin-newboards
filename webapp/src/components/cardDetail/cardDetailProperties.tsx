@@ -204,6 +204,18 @@ const CardDetailProperties = (props: Props) => {
                                     onMoveDown={() => moveProperty(propertyTemplate, 'down')}
                                     canMoveUp={index > 0}
                                     canMoveDown={index < board.cardProperties.length - 1}
+                                    onBoardSelected={(selectedBoard: Board) => {
+                                        // 메뉴가 닫힌 후에 비동기 작업 실행
+                                        setTimeout(async () => {
+                                            // 보드가 변경되면 모든 카드의 해당 속성에 새 보드 ID만 저장 (카드 선택은 초기화)
+                                            for (const c of cards) {
+                                                await mutator.changePropertyValue(board.id, c, propertyTemplate.id, `${selectedBoard.id}:`, 'set board id')
+                                            }
+                                            // 속성 이름을 선택한 보드 이름으로 변경
+                                            const cardPropertyType = propRegistry.get(propertyTemplate.type)
+                                            await mutator.changePropertyTypeAndName(board, cards, propertyTemplate, cardPropertyType.type, selectedBoard.title)
+                                        }, 0)
+                                    }}
                                 />
                             </MenuWrapper>
                         }
