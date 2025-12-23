@@ -81,7 +81,7 @@ const CardPropertyEditor = (props: PropertyProps) => {
         setLoading(true)
         setBoardAccessError(false)
         try {
-            // 먼저 보드에 접근 가능하고 공개인지 확인
+            // 먼저 보드에 접근 가능한지 확인
             const linkedBoard = await octoClient.getBoard(linkedBoardId)
             if (!linkedBoard) {
                 // 보드가 삭제되었거나 접근 권한이 없음
@@ -89,12 +89,7 @@ const CardPropertyEditor = (props: PropertyProps) => {
                 setCards([])
                 return
             }
-            if (linkedBoard.type !== 'O') {
-                // 보드가 더 이상 공개가 아님
-                setBoardAccessError(true)
-                setCards([])
-                return
-            }
+            // 보드에 접근 가능하면 공개/비공개 관계없이 카드 목록 가져오기
             const blocks = await octoClient.getAllBlocks(linkedBoardId)
             const cardBlocks = blocks.filter((block: Block) => block.type === 'card') as Card[]
             setCards(cardBlocks)
@@ -107,7 +102,7 @@ const CardPropertyEditor = (props: PropertyProps) => {
         }
     }, [linkedBoardId])
 
-    // 보드 접근성 확인 (컴포넌트 마운트 시) - 보드가 여전히 공개인지 확인
+    // 보드 접근성 확인 (컴포넌트 마운트 시) - 보드에 접근 가능한지만 확인
     const checkBoardAccess = useCallback(async () => {
         if (!linkedBoardId) {
             return
@@ -115,12 +110,10 @@ const CardPropertyEditor = (props: PropertyProps) => {
         try {
             const linkedBoard = await octoClient.getBoard(linkedBoardId)
             if (!linkedBoard) {
-                // 보드가 삭제되었거나 접근 불가
-                setBoardAccessError(true)
-            } else if (linkedBoard.type !== 'O') {
-                // 보드가 더 이상 공개가 아님 (비공개로 변경됨)
+                // 보드가 삭제되었거나 접근 권한이 없음
                 setBoardAccessError(true)
             }
+            // 보드에 접근 가능하면 공개/비공개 관계없이 사용 가능
         } catch (error) {
             console.error('Failed to check board access:', error)
             setBoardAccessError(true)
