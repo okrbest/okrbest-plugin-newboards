@@ -74,9 +74,11 @@ const PropertyMenu = (props: Props) => {
         }
         setLoadingBoards(true)
         try {
-            const items = await octoClient.searchLinkableBoards(teamId, '')
-            const publicBoards = items.filter((b) => b.type === 'O' && !b.isTemplate)
-            setBoards(publicBoards)
+            // getBoards를 사용하여 사용자가 접근 가능한 모든 보드 가져오기
+            const items = await octoClient.getBoards()
+            // 템플릿만 제외
+            const accessibleBoards = items.filter((b) => !b.isTemplate)
+            setBoards(accessibleBoards)
         } catch (error) {
             console.error('Failed to fetch boards:', error)
         } finally {
@@ -142,7 +144,7 @@ const PropertyMenu = (props: Props) => {
                     ) : boards.length === 0 ? (
                         <Menu.Label>
                             <span style={{color: 'rgba(var(--center-channel-color-rgb), 0.56)'}}>
-                                {intl.formatMessage({id: 'PropertyMenu.NoBoards', defaultMessage: 'No public boards available'})}
+                                {intl.formatMessage({id: 'PropertyMenu.NoBoards', defaultMessage: 'No boards available'})}
                             </span>
                         </Menu.Label>
                     ) : (
