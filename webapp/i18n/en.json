@@ -107,6 +107,8 @@
   "CardBadges.title-checkboxes": "Checkboxes",
   "CardBadges.title-comments": "Comments",
   "CardBadges.title-description": "This card has a description",
+  "CardProperty.boardAccessError": "Board is no longer public or accessible. Please select a different board.",
+  "CardProperty.boardNotAccessible": "Board is no longer public",
   "CardProperty.loading": "Loading...",
   "CardProperty.noBoards": "No public boards available",
   "CardProperty.noCards": "No cards available",

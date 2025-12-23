@@ -29,6 +29,7 @@ const CardPropertyEditor = (props: PropertyProps) => {
     const [open, setOpen] = useState(false)
     const [cards, setCards] = useState<Card[]>([])
     const [loading, setLoading] = useState(false)
+    const [boardAccessError, setBoardAccessError] = useState(false)
     const isEditable = !props.readOnly && Boolean(board)
 
     const emptyDisplayValue = props.showEmptyPlaceholder
@@ -78,17 +79,62 @@ const CardPropertyEditor = (props: PropertyProps) => {
             return
         }
         setLoading(true)
+        setBoardAccessError(false)
         try {
+            // 먼저 보드에 접근 가능하고 공개인지 확인
+            const linkedBoard = await octoClient.getBoard(linkedBoardId)
+            if (!linkedBoard) {
+                // 보드가 삭제되었거나 접근 권한이 없음
+                setBoardAccessError(true)
+                setCards([])
+                return
+            }
+            if (linkedBoard.type !== 'O') {
+                // 보드가 더 이상 공개가 아님
+                setBoardAccessError(true)
+                setCards([])
+                return
+            }
             const blocks = await octoClient.getAllBlocks(linkedBoardId)
             const cardBlocks = blocks.filter((block: Block) => block.type === 'card') as Card[]
             setCards(cardBlocks)
         } catch (error) {
             console.error('Failed to fetch cards:', error)
+            setBoardAccessError(true)
+            setCards([])
         } finally {
             setLoading(false)
         }
     }, [linkedBoardId])
 
+    // 보드 접근성 확인 (컴포넌트 마운트 시) - 보드가 여전히 공개인지 확인
+    const checkBoardAccess = useCallback(async () => {
+        if (!linkedBoardId) {
+            return
+        }
+        try {
+            const linkedBoard = await octoClient.getBoard(linkedBoardId)
+            if (!linkedBoard) {
+                // 보드가 삭제되었거나 접근 불가
+                setBoardAccessError(true)
+            } else if (linkedBoard.type !== 'O') {
+                // 보드가 더 이상 공개가 아님 (비공개로 변경됨)
+                setBoardAccessError(true)
+            }
+        } catch (error) {
+            console.error('Failed to check board access:', error)
+            setBoardAccessError(true)
+        }
+    }, [linkedBoardId])
+
+    // 컴포넌트 마운트 시 보드 접근성 확인
+    useEffect(() => {
+        if (linkedBoardId) {
+            checkBoardAccess()
+        }
+    }, [linkedBoardId, checkBoardAccess])
+
+    // 드롭다운 열 때 카드 목록 가져오기
     useEffect(() => {
         if (open && linkedBoardId) {
             fetchCards()
@@ -139,10 +185,14 @@ const CardPropertyEditor = (props: PropertyProps) => {
 
     return (
         <div
-            className={`CardProperty ${props.property.valueClassName(!isEditable)} ${!hasSelectedCard && isEditable ? 'CardProperty--clickable' : ''}`}
+            className={`CardProperty ${props.property.valueClassName(!isEditable)} ${!hasSelectedCard && isEditable ? 'CardProperty--clickable' : ''} ${boardAccessError ? 'CardProperty--error' : ''}`}
             onClick={handleContainerClick}
         >
-            {hasSelectedCard ? (
+            {boardAccessError ? (
+                <span className='CardProperty-errorText'>
+                    {intl.formatMessage({id: 'CardProperty.boardNotAccessible', defaultMessage: 'Board not accessible'})}
+                </span>
+            ) : hasSelectedCard ? (
                 <>
                     <a
                         className='CardProperty-link'
@@ -193,6 +243,10 @@ const CardPropertyEditor = (props: PropertyProps) => {
                     {loading ? (
                         <div className='CardProperty-loading'>
                             {intl.formatMessage({id: 'CardProperty.loading', defaultMessage: 'Loading...'})}
+                        </div>
+                    ) : boardAccessError ? (
+                        <div className='CardProperty-error'>
+                            {intl.formatMessage({id: 'CardProperty.boardAccessError', defaultMessage: 'Board is no longer accessible. Please select a different board.'})}
                         </div>
                     ) : cards.length === 0 ? (
                         <div className='CardProperty-empty'>
