@@ -1,7 +1,7 @@
 // Copyright (c) 2020-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import React, {useState, useCallback, useEffect} from 'react'
+import React, {useState, useCallback, useEffect, useMemo} from 'react'
 import {useIntl} from 'react-intl'
 import {generatePath} from 'react-router-dom'
 
@@ -13,6 +13,7 @@ import {useAppSelector} from '../../store/hooks'
 import {getCurrentTeamId} from '../../store/teams'
 import IconButton from '../../widgets/buttons/iconButton'
 import EditIcon from '../../widgets/icons/edit'
+import CloseIcon from '../../widgets/icons/close'
 
 import {PropertyProps} from '../types'
 
@@ -20,6 +21,62 @@ import './card.scss'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const windowAny = window as any
+
+// 선택된 카드 정보 타입
+interface SelectedCard {
+    id: string
+    title: string
+}
+
+// 저장 형식: "boardId|cardId1:cardTitle1,cardId2:cardTitle2,..."
+const parsePropertyValue = (value: string | string[] | undefined): {boardId: string, selectedCards: SelectedCard[]} => {
+    if (!value || typeof value !== 'string' || !value.includes('|')) {
+        // 이전 형식 호환: "boardId:cardId:cardTitle"
+        if (value && typeof value === 'string') {
+            const parts = value.split(':')
+            if (parts.length >= 1) {
+                const boardId = parts[0]
+                if (parts.length >= 3) {
+                    return {
+                        boardId,
+                        selectedCards: [{id: parts[1], title: parts.slice(2).join(':')}],
+                    }
+                }
+                return {boardId, selectedCards: []}
+            }
+        }
+        return {boardId: '', selectedCards: []}
+    }
+
+    const [boardId, cardsStr] = value.split('|')
+    if (!cardsStr) {
+        return {boardId, selectedCards: []}
+    }
+
+    const selectedCards: SelectedCard[] = cardsStr.split(',').map((cardStr) => {
+        const colonIndex = cardStr.indexOf(':')
+        if (colonIndex === -1) {
+            return {id: cardStr, title: 'Untitled'}
+        }
+        return {
+            id: cardStr.substring(0, colonIndex),
+            title: cardStr.substring(colonIndex + 1) || 'Untitled',
+        }
+    }).filter((c) => c.id)
+
+    return {boardId, selectedCards}
+}
+
+const serializePropertyValue = (boardId: string, selectedCards: SelectedCard[]): string => {
+    if (!boardId) {
+        return ''
+    }
+    if (selectedCards.length === 0) {
+        return `${boardId}|`
+    }
+    const cardsStr = selectedCards.map((c) => `${c.id}:${c.title}`).join(',')
+    return `${boardId}|${cardsStr}`
+}
 
 const CardPropertyEditor = (props: PropertyProps) => {
     const {propertyValue, propertyTemplate, board, card} = props
@@ -36,42 +93,13 @@ const CardPropertyEditor = (props: PropertyProps) => {
         ? intl.formatMessage({id: 'PropertyValueElement.empty', defaultMessage: 'Empty'})
         : ''
 
-    // propertyValue에서 boardId, cardId, cardTitle 추출 (형식: "boardId:cardId:cardTitle")
-    const getBoardId = useCallback(() => {
-        if (propertyValue && typeof propertyValue === 'string') {
-            const parts = propertyValue.split(':')
-            if (parts.length >= 1) {
-                return parts[0]
-            }
-        }
-        return ''
-    }, [propertyValue])
+    // propertyValue 파싱
+    const {boardId: linkedBoardId, selectedCards} = useMemo(
+        () => parsePropertyValue(propertyValue),
+        [propertyValue],
+    )
 
-    const getCardId = useCallback(() => {
-        if (propertyValue && typeof propertyValue === 'string') {
-            const parts = propertyValue.split(':')
-            if (parts.length >= 2) {
-                return parts[1]
-            }
-        }
-        return ''
-    }, [propertyValue])
-
-    const getDisplayValue = useCallback(() => {
-        if (propertyValue && typeof propertyValue === 'string') {
-            const parts = propertyValue.split(':')
-            if (parts.length >= 3) {
-                return parts.slice(2).join(':') // cardTitle 반환
-            }
-        }
-        return ''
-    }, [propertyValue])
-
-    const linkedBoardId = getBoardId()
-    const linkedCardId = getCardId()
-    const displayValue = getDisplayValue()
-    const finalDisplayValue = displayValue || emptyDisplayValue
-    const hasSelectedCard = Boolean(linkedCardId && displayValue)
+    const hasSelectedCards = selectedCards.length > 0
 
     // 연결된 보드의 카드 목록 가져오기
     const fetchCards = useCallback(async () => {
@@ -81,15 +109,12 @@ const CardPropertyEditor = (props: PropertyProps) => {
         setLoading(true)
         setBoardAccessError(false)
         try {
-            // 먼저 보드에 접근 가능한지 확인
             const linkedBoard = await octoClient.getBoard(linkedBoardId)
             if (!linkedBoard) {
-                // 보드가 삭제되었거나 접근 권한이 없음
                 setBoardAccessError(true)
                 setCards([])
                 return
             }
-            // 보드에 접근 가능하면 공개/비공개 관계없이 카드 목록 가져오기
             const blocks = await octoClient.getAllBlocks(linkedBoardId)
             const cardBlocks = blocks.filter((block: Block) => block.type === 'card') as Card[]
             setCards(cardBlocks)
@@ -102,7 +127,7 @@ const CardPropertyEditor = (props: PropertyProps) => {
         }
     }, [linkedBoardId])
 
-    // 보드 접근성 확인 (컴포넌트 마운트 시) - 보드에 접근 가능한지만 확인
+    // 보드 접근성 확인 (컴포넌트 마운트 시)
     const checkBoardAccess = useCallback(async () => {
         if (!linkedBoardId) {
             return
@@ -110,10 +135,8 @@ const CardPropertyEditor = (props: PropertyProps) => {
         try {
             const linkedBoard = await octoClient.getBoard(linkedBoardId)
             if (!linkedBoard) {
-                // 보드가 삭제되었거나 접근 권한이 없음
                 setBoardAccessError(true)
             }
-            // 보드에 접근 가능하면 공개/비공개 관계없이 사용 가능
         } catch (error) {
             console.error('Failed to check board access:', error)
             setBoardAccessError(true)
@@ -134,36 +157,46 @@ const CardPropertyEditor = (props: PropertyProps) => {
         }
     }, [open, linkedBoardId, fetchCards])
 
-    const handleCardSelect = useCallback(async (selectedCard: Card) => {
-        // 속성 값을 "boardId:cardId:cardTitle" 형식으로 저장
-        const newValue = `${linkedBoardId}:${selectedCard.id}:${selectedCard.title || 'Untitled'}`
-        await mutator.changePropertyValue(board.id, card, propertyTemplate.id, newValue)
-        setOpen(false)
-    }, [linkedBoardId, board, card, propertyTemplate])
-
-    // 선택된 카드로 이동
-    const handleCardClick = useCallback(() => {
-        if (!linkedBoardId || !linkedCardId || !currentTeamId) {
+    // 카드 추가
+    const handleCardAdd = useCallback(async (selectedCard: Card) => {
+        // 이미 선택된 카드인지 확인
+        if (selectedCards.some((c) => c.id === selectedCard.id)) {
             return
         }
-        // viewId가 없으면 0을 사용하여 첫 번째 뷰로 이동
+        const newSelectedCards = [...selectedCards, {id: selectedCard.id, title: selectedCard.title || 'Untitled'}]
+        const newValue = serializePropertyValue(linkedBoardId, newSelectedCards)
+        await mutator.changePropertyValue(board.id, card, propertyTemplate.id, newValue)
+    }, [linkedBoardId, selectedCards, board, card, propertyTemplate])
+
+    // 카드 삭제
+    const handleCardRemove = useCallback(async (cardIdToRemove: string) => {
+        const newSelectedCards = selectedCards.filter((c) => c.id !== cardIdToRemove)
+        const newValue = serializePropertyValue(linkedBoardId, newSelectedCards)
+        await mutator.changePropertyValue(board.id, card, propertyTemplate.id, newValue)
+    }, [linkedBoardId, selectedCards, board, card, propertyTemplate])
+
+    // 선택된 카드로 이동
+    const handleCardClick = useCallback((cardId: string) => {
+        if (!linkedBoardId || !cardId || !currentTeamId) {
+            return
+        }
         const params = {
             teamId: currentTeamId,
             boardId: linkedBoardId,
             viewId: '0',
-            cardId: linkedCardId,
+            cardId,
         }
         const cardPath = generatePath('/team/:teamId/:boardId/:viewId/:cardId', params)
         const cardUrl = `${window.location.origin}${windowAny.frontendBaseURL || ''}${cardPath}`
         window.open(cardUrl, '_blank', 'noopener')
-    }, [linkedBoardId, linkedCardId, currentTeamId])
+    }, [linkedBoardId, currentTeamId])
 
-    // 빈 상태에서 전체 영역 클릭 시 드롭다운 열기 (early return 전에 Hook 호출)
+    // 빈 상태에서 전체 영역 클릭 시 드롭다운 열기
     const handleContainerClick = useCallback(() => {
-        if (isEditable && !hasSelectedCard && !open) {
+        if (isEditable && !hasSelectedCards && !open) {
             setOpen(true)
         }
-    }, [isEditable, hasSelectedCard, open])
+    }, [isEditable, hasSelectedCards, open])
 
     // 보드가 선택되지 않은 경우 안내 메시지 표시
     if (!linkedBoardId) {
@@ -176,31 +209,52 @@ const CardPropertyEditor = (props: PropertyProps) => {
         )
     }
 
+    // 이미 선택된 카드 ID 목록
+    const selectedCardIds = new Set(selectedCards.map((c) => c.id))
+
     return (
         <div
-            className={`CardProperty ${props.property.valueClassName(!isEditable)} ${!hasSelectedCard && isEditable ? 'CardProperty--clickable' : ''} ${boardAccessError ? 'CardProperty--error' : ''}`}
+            className={`CardProperty ${props.property.valueClassName(!isEditable)} ${!hasSelectedCards && isEditable ? 'CardProperty--clickable' : ''} ${boardAccessError ? 'CardProperty--error' : ''}`}
             onClick={handleContainerClick}
         >
             {boardAccessError ? (
                 <span className='CardProperty-errorText'>
                     {intl.formatMessage({id: 'CardProperty.boardNotAccessible', defaultMessage: 'Board not accessible'})}
                 </span>
-            ) : hasSelectedCard ? (
-                <>
-                    <a
-                        className='CardProperty-link'
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            handleCardClick()
-                        }}
-                        title={intl.formatMessage({id: 'CardProperty.openCard', defaultMessage: 'Open card'})}
-                    >
-                        {displayValue}
-                    </a>
+            ) : hasSelectedCards ? (
+                <div className='CardProperty-tags'>
+                    {selectedCards.map((c) => (
+                        <div
+                            key={c.id}
+                            className='CardProperty-tag'
+                        >
+                            <span
+                                className='CardProperty-tagText'
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleCardClick(c.id)
+                                }}
+                                title={intl.formatMessage({id: 'CardProperty.openCard', defaultMessage: 'Open card'})}
+                            >
+                                {c.title}
+                            </span>
+                            {isEditable && (
+                                <IconButton
+                                    className='CardProperty-tagRemove'
+                                    icon={<CloseIcon/>}
+                                    title={intl.formatMessage({id: 'CardProperty.removeCard', defaultMessage: 'Remove'})}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        handleCardRemove(c.id)
+                                    }}
+                                />
+                            )}
+                        </div>
+                    ))}
                     {isEditable && (
                         <IconButton
-                            className='CardProperty-editButton'
-                            title={intl.formatMessage({id: 'CardProperty.changeCard', defaultMessage: 'Change card'})}
+                            className='CardProperty-addButton'
+                            title={intl.formatMessage({id: 'CardProperty.addCard', defaultMessage: 'Add card'})}
                             icon={<EditIcon/>}
                             onClick={(e) => {
                                 e.stopPropagation()
@@ -208,11 +262,11 @@ const CardPropertyEditor = (props: PropertyProps) => {
                             }}
                         />
                     )}
-                </>
+                </div>
             ) : (
                 <>
                     <span className='CardProperty-placeholder'>
-                        {finalDisplayValue}
+                        {emptyDisplayValue}
                     </span>
                     {isEditable && (
                         <IconButton
@@ -229,7 +283,10 @@ const CardPropertyEditor = (props: PropertyProps) => {
             )}
             
             {open && (
-                <div className='CardProperty-dropdown'>
+                <div
+                    className='CardProperty-dropdown'
+                    onClick={(e) => e.stopPropagation()}
+                >
                     <div className='CardProperty-header'>
                         {intl.formatMessage({id: 'CardProperty.selectCard', defaultMessage: 'Select a card'})}
                     </div>
@@ -239,7 +296,7 @@ const CardPropertyEditor = (props: PropertyProps) => {
                         </div>
                     ) : boardAccessError ? (
                         <div className='CardProperty-error'>
-                            {intl.formatMessage({id: 'CardProperty.boardAccessError', defaultMessage: 'Board is no longer accessible. Please select a different board.'})}
+                            {intl.formatMessage({id: 'CardProperty.boardAccessError', defaultMessage: 'Board has been deleted or is no longer accessible. Please select a different board.'})}
                         </div>
                     ) : cards.length === 0 ? (
                         <div className='CardProperty-empty'>
@@ -247,17 +304,28 @@ const CardPropertyEditor = (props: PropertyProps) => {
                         </div>
                     ) : (
                         <div className='CardProperty-list'>
-                            {cards.map((c) => (
-                                <div
-                                    key={c.id}
-                                    className='CardProperty-item'
-                                    onClick={() => handleCardSelect(c)}
-                                >
-                                    <span className='CardProperty-title'>
-                                        {c.title || intl.formatMessage({id: 'CardProperty.untitled', defaultMessage: 'Untitled'})}
-                                    </span>
-                                </div>
-                            ))}
+                            {cards.map((c) => {
+                                const isSelected = selectedCardIds.has(c.id)
+                                return (
+                                    <div
+                                        key={c.id}
+                                        className={`CardProperty-item ${isSelected ? 'CardProperty-item--selected' : ''}`}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            if (!isSelected) {
+                                                handleCardAdd(c)
+                                            }
+                                        }}
+                                    >
+                                        <span className='CardProperty-title'>
+                                            {c.title || intl.formatMessage({id: 'CardProperty.untitled', defaultMessage: 'Untitled'})}
+                                        </span>
+                                        {isSelected && (
+                                            <span className='CardProperty-check'>✓</span>
+                                        )}
+                                    </div>
+                                )
+                            })}
                         </div>
                     )}
                     <div
@@ -271,4 +339,3 @@ const CardPropertyEditor = (props: PropertyProps) => {
 }
 
 export default React.memo(CardPropertyEditor)
-

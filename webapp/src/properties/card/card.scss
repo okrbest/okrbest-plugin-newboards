@@ -4,10 +4,12 @@
 .CardProperty {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     overflow: visible;
     width: 100%;
     position: relative;
     min-height: 32px;
+    gap: 4px;
 
     &.CardProperty--clickable {
         cursor: pointer;
@@ -21,6 +23,75 @@
         .CardProperty-errorText {
             color: rgb(var(--error-text-color-rgb, 210, 75, 78));
             font-size: 13px;
+        }
+    }
+
+    .CardProperty-tags {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px;
+        flex: 1;
+    }
+
+    .CardProperty-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 6px;
+        background-color: rgba(var(--center-channel-color-rgb), 0.08);
+        border-radius: 12px;
+        font-size: 13px;
+        max-width: 150px;
+
+        .CardProperty-tagText {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: rgb(var(--center-channel-color-rgb));
+            cursor: pointer;
+            text-decoration: underline rgba(var(--center-channel-color-rgb), 0.3);
+
+            &:hover {
+                text-decoration: underline rgba(var(--center-channel-color-rgb), 0.7);
+            }
+        }
+
+        .CardProperty-tagRemove {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            margin-left: 2px;
+            padding: 0;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            opacity: 0.5;
+
+            &:hover {
+                opacity: 1;
+                background-color: rgba(var(--center-channel-color-rgb), 0.1);
+                border-radius: 50%;
+            }
+
+            svg {
+                width: 12px;
+                height: 12px;
+            }
+        }
+    }
+
+    .CardProperty-addButton {
+        display: flex !important;
+        width: 24px;
+        height: 24px;
+        margin: 0;
+        opacity: 0.5;
+
+        &:hover {
+            opacity: 1;
+            background-color: rgba(var(--center-channel-color-rgb), 0.1);
         }
     }
 
@@ -47,7 +118,7 @@
         cursor: pointer;
     }
 
-    .IconButton {
+    .CardProperty-editButton {
         display: none;
         margin: 0 0 0 4px;
         flex: 0 0 24px;
@@ -58,7 +129,7 @@
     }
 
     &:hover {
-        .IconButton {
+        .CardProperty-editButton {
             display: flex;
         }
     }
@@ -117,6 +188,15 @@
         &:hover {
             background-color: rgba(var(--center-channel-color-rgb), 0.08);
         }
+
+        &.CardProperty-item--selected {
+            background-color: rgba(var(--center-channel-color-rgb), 0.04);
+            cursor: default;
+
+            .CardProperty-title {
+                color: rgba(var(--center-channel-color-rgb), 0.5);
+            }
+        }
     }
 
     .CardProperty-title {
@@ -128,6 +208,12 @@
         text-overflow: ellipsis;
     }
 
+    .CardProperty-check {
+        margin-left: 8px;
+        color: rgb(var(--button-bg-rgb, 56, 111, 229));
+        font-size: 14px;
+    }
+
     .CardProperty-backdrop {
         position: fixed;
         top: 0;
@@ -137,4 +223,3 @@
         z-index: -1;
     }
 }
-
