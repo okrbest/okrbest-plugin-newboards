@@ -1,0 +1,225 @@
+// Copyright (c) 2020-present Mattermost, Inc. All Rights Reserved.
+// See LICENSE.txt for license information.
+
+.CardProperty {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    overflow: visible;
+    width: 100%;
+    position: relative;
+    min-height: 32px;
+    gap: 4px;
+
+    &.CardProperty--clickable {
+        cursor: pointer;
+
+        &:hover {
+            background-color: rgba(var(--center-channel-color-rgb), 0.08);
+        }
+    }
+
+    &.CardProperty--error {
+        .CardProperty-errorText {
+            color: rgb(var(--error-text-color-rgb, 210, 75, 78));
+            font-size: 13px;
+        }
+    }
+
+    .CardProperty-tags {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px;
+        flex: 1;
+    }
+
+    .CardProperty-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 6px;
+        background-color: rgba(var(--center-channel-color-rgb), 0.08);
+        border-radius: 12px;
+        font-size: 13px;
+        max-width: 150px;
+
+        .CardProperty-tagText {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: rgb(var(--center-channel-color-rgb));
+            cursor: pointer;
+            text-decoration: underline rgba(var(--center-channel-color-rgb), 0.3);
+
+            &:hover {
+                text-decoration: underline rgba(var(--center-channel-color-rgb), 0.7);
+            }
+        }
+
+        .CardProperty-tagRemove {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            margin-left: 2px;
+            padding: 0;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            opacity: 0.5;
+
+            &:hover {
+                opacity: 1;
+                background-color: rgba(var(--center-channel-color-rgb), 0.1);
+                border-radius: 50%;
+            }
+
+            svg {
+                width: 12px;
+                height: 12px;
+            }
+        }
+    }
+
+    .CardProperty-addButton {
+        display: flex !important;
+        width: 24px;
+        height: 24px;
+        margin: 0;
+        opacity: 0.5;
+
+        &:hover {
+            opacity: 1;
+            background-color: rgba(var(--center-channel-color-rgb), 0.1);
+        }
+    }
+
+    .CardProperty-link {
+        flex: 1 1 auto;
+        padding-left: 1px;
+        margin-right: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        color: rgb(var(--center-channel-color-rgb));
+        text-overflow: ellipsis;
+        text-decoration: underline rgba(var(--center-channel-color-rgb), 0.5);
+        cursor: pointer;
+
+        &:hover {
+            background-color: rgba(var(--center-channel-color-rgb), 0.1);
+        }
+    }
+
+    .CardProperty-placeholder {
+        flex: 1 1 auto;
+        padding-left: 1px;
+        color: rgba(var(--center-channel-color-rgb), 0.4);
+        cursor: pointer;
+    }
+
+    .CardProperty-editButton {
+        display: none;
+        margin: 0 0 0 4px;
+        flex: 0 0 24px;
+
+        &:hover {
+            background-color: rgba(var(--center-channel-color-rgb), 0.1);
+        }
+    }
+
+    &:hover {
+        .CardProperty-editButton {
+            display: flex;
+        }
+    }
+
+    .CardProperty-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 100;
+        min-width: 250px;
+        max-width: 350px;
+        max-height: 300px;
+        background-color: rgb(var(--center-channel-bg-rgb));
+        border-radius: 4px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+    }
+
+    .CardProperty-header {
+        padding: 12px 16px;
+        font-weight: 600;
+        font-size: 13px;
+        color: rgba(var(--center-channel-color-rgb), 0.75);
+        border-bottom: 1px solid rgba(var(--center-channel-color-rgb), 0.08);
+    }
+
+    .CardProperty-loading,
+    .CardProperty-empty {
+        padding: 16px;
+        text-align: center;
+        color: rgba(var(--center-channel-color-rgb), 0.56);
+        font-size: 13px;
+    }
+
+    .CardProperty-error {
+        padding: 16px;
+        text-align: center;
+        color: rgb(var(--error-text-color-rgb, 210, 75, 78));
+        font-size: 13px;
+        background-color: rgba(var(--error-text-color-rgb, 210, 75, 78), 0.08);
+    }
+
+    .CardProperty-list {
+        max-height: 240px;
+        overflow-y: auto;
+        padding: 4px 0;
+    }
+
+    .CardProperty-item {
+        display: flex;
+        align-items: center;
+        padding: 8px 16px;
+        cursor: pointer;
+        transition: background-color 0.1s ease;
+
+        &:hover {
+            background-color: rgba(var(--center-channel-color-rgb), 0.08);
+        }
+
+        &.CardProperty-item--selected {
+            background-color: rgba(var(--center-channel-color-rgb), 0.04);
+            cursor: default;
+
+            .CardProperty-title {
+                color: rgba(var(--center-channel-color-rgb), 0.5);
+            }
+        }
+    }
+
+    .CardProperty-title {
+        flex: 1;
+        font-size: 14px;
+        color: rgb(var(--center-channel-color-rgb));
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .CardProperty-check {
+        margin-left: 8px;
+        color: rgb(var(--button-bg-rgb, 56, 111, 229));
+        font-size: 14px;
+    }
+
+    .CardProperty-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: -1;
+    }
+}
