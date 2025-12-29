@@ -125,6 +125,13 @@ type Store interface {
 	SaveFileInfo(fileInfo *mmModel.FileInfo) error
 	RestoreFiles(fileIDs []string) error
 
+	// BlockSuite document operations
+	GetBlockSuiteDocByCardID(cardID string) (*model.BlockSuiteDoc, error)
+	GetBlockSuiteDocInfoByCardID(cardID string) (*model.BlockSuiteDocInfo, error)
+	// @withTransaction
+	UpsertBlockSuiteDoc(doc *model.BlockSuiteDoc) error
+	DeleteBlockSuiteDocByCardID(cardID string) error
+
 	// @withTransaction
 	AddUpdateCategoryBoard(userID, categoryID string, boardIDs []string) error
 	ReorderCategoryBoards(categoryID string, newBoardsOrder []string) ([]string, error)
