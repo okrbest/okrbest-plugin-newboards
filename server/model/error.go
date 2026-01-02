@@ -259,6 +259,7 @@ func IsErrForbidden(err error) bool {
 // IsErrNotFound returns true if `err` is or wraps one of:
 // - model.ErrNotFound
 // - model.ErrNotAllFound
+// - model.ErrBlockSuiteDocNotFound
 // - sql.ErrNoRows
 // - mattermost-plugin-api/ErrNotFound.
 // - model.ErrCategoryDeleted.
@@ -276,6 +277,12 @@ func IsErrNotFound(err error) bool {
 	// check if this is a model.ErrNotAllFound
 	var naf *ErrNotAllFound
 	if errors.As(err, &naf) {
+		return true
+	}
+
+	// check if this is a model.ErrBlockSuiteDocNotFound
+	var bsf *ErrBlockSuiteDocNotFound
+	if errors.As(err, &bsf) {
 		return true
 	}
 
