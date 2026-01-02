@@ -242,7 +242,6 @@ const ContentBlockWithDragAndDrop = (
 }
 
 const CardDetailContents = (props: Props) => {
-    console.log('CardDetailContents', props)
     const intl = useIntl()
     const { contents, card, id } = props
     if (contents.length) {

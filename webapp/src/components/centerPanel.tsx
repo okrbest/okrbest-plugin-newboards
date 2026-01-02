@@ -171,8 +171,85 @@ const CenterPanel = (props: Props) => {
         props.showCard(cardId)
     }, [props.showCard, selectedCardIds])
 
+    const addCardFromTemplate = useCallback(async (cardTemplateId: string, groupByOptionId?: string) => {
+        const {activeView, board, groupByProperty} = props
+
+        const propertiesThatMeetFilters = CardFilter.propertiesThatMeetFilterGroup(activeView.fields.filter, board.cardProperties)
+        if ((activeView.fields.viewType === 'board' || activeView.fields.viewType === 'table') && groupByProperty) {
+            if (groupByOptionId) {
+                propertiesThatMeetFilters[groupByProperty.id] = groupByOptionId
+            } else {
+                delete propertiesThatMeetFilters[groupByProperty.id]
+            }
+        }
+
+        // card 타입 속성의 경우, 다른 카드에서 보드 ID 참조하여 자동 설정
+        const cardProperties: Record<string, string> = {}
+        for (const propertyTemplate of board.cardProperties) {
+            if (propertyTemplate.type === 'card') {
+                // 이미 설정된 속성이 있으면 건너뛰기
+                if (propertiesThatMeetFilters[propertyTemplate.id]) {
+                    continue
+                }
+                // 다른 카드에서 보드 ID 찾기
+                let foundBoardId: string | null = null
+                for (const otherCard of props.cards) {
+                    const otherValue = otherCard.fields.properties[propertyTemplate.id]
+                    if (otherValue && typeof otherValue === 'string') {
+                        // "boardId|" 형식인 경우 boardId 추출
+                        if (otherValue.includes('|')) {
+                            const boardId = otherValue.split('|')[0]
+                            if (boardId) {
+                                foundBoardId = boardId
+                                break
+                            }
+                        } else if (otherValue.includes(':')) {
+                            // 이전 형식 "boardId:" 지원
+                            const boardId = otherValue.split(':')[0]
+                            if (boardId) {
+                                foundBoardId = boardId
+                                break
+                            }
+                        }
+                    }
+                }
+                if (foundBoardId) {
+                    cardProperties[propertyTemplate.id] = `${foundBoardId}|`
+                }
+            }
+        }
+
+        // cardProperties를 propertiesThatMeetFilters에 병합
+        Object.assign(propertiesThatMeetFilters, cardProperties)
+
+        mutator.performAsUndoGroup(async () => {
+            const [, newCardId] = await mutator.duplicateCard(
+                cardTemplateId,
+                board.id,
+                true,
+                intl.formatMessage({id: 'Mutator.new-card-from-template', defaultMessage: 'new card from template'}),
+                false,
+                propertiesThatMeetFilters,
+                async (cardId) => {
+                    dispatch(updateView({...activeView, fields: {...activeView.fields, cardOrder: [...activeView.fields.cardOrder, cardId]}}))
+                    TelemetryClient.trackEvent(TelemetryCategory, TelemetryActions.CreateCardViaTemplate, {board: props.board.id, view: props.activeView.id, card: cardId, cardTemplateId})
+                    showCard(cardId)
+                },
+                async () => {
+                    showCard(undefined)
+                },
+            )
+            await mutator.changeViewCardOrder(props.board.id, activeView.id, activeView.fields.cardOrder, [...activeView.fields.cardOrder, newCardId], 'add-card')
+        })
+    }, [props.board, props.activeView, showCard, props.cards, intl, dispatch])
+
     const addCard = useCallback(async (groupByOptionId?: string, show = false, properties: Record<string, string> = {}): Promise<void> => {
         const {activeView, board, groupByProperty} = props
+        
+        // 기본 템플릿이 설정되어 있으면 템플릿에서 카드 생성
+        if (activeView.fields.defaultTemplateId) {
+            return addCardFromTemplate(activeView.fields.defaultTemplateId, groupByOptionId)
+        }
 
         const card = createCard()
 
@@ -198,6 +275,7 @@ const CenterPanel = (props: Props) => {
                     continue
                 }
                 // 다른 카드에서 보드 ID 찾기
+                let foundBoardId: string | null = null
                 for (const otherCard of props.cards) {
                     const otherValue = otherCard.fields.properties[propertyTemplate.id]
                     if (otherValue && typeof otherValue === 'string') {
@@ -205,18 +283,21 @@ const CenterPanel = (props: Props) => {
                         if (otherValue.includes('|')) {
                             const boardId = otherValue.split('|')[0]
                             if (boardId) {
-                                cardProperties[propertyTemplate.id] = `${boardId}|`
+                                foundBoardId = boardId
                                 break
                             }
                         } else if (otherValue.includes(':')) {
                             // 이전 형식 "boardId:" 지원
                             const boardId = otherValue.split(':')[0]
                             if (boardId) {
-                                cardProperties[propertyTemplate.id] = `${boardId}|`
+                                foundBoardId = boardId
                                 break
                             }
                         }
                     }
+                }
+                if (foundBoardId) {
+                    cardProperties[propertyTemplate.id] = `${foundBoardId}|`
                 }
             }
         }
@@ -248,7 +329,7 @@ const CenterPanel = (props: Props) => {
             dispatch(showCardHiddenWarning(cardLimitTimestamp > 0))
             await mutator.changeViewCardOrder(board.id, activeView.id, activeView.fields.cardOrder, [...activeView.fields.cardOrder, newCard.id], 'add-card')
         })
-    }, [props.activeView, props.board.id, props.board.cardProperties, props.groupByProperty, showCard])
+    }, [props.activeView, props.board.id, props.board.cardProperties, props.groupByProperty, showCard, addCardFromTemplate, dispatch, cardLimitTimestamp, setCardIdToFocusOnRender])
 
     const addEmptyCardAndShow = useCallback(() => addCard('', true), [addCard])
 
@@ -297,39 +378,6 @@ const CenterPanel = (props: Props) => {
             e.stopPropagation()
         }
     }, [selectedCardIds])
-
-    const addCardFromTemplate = useCallback(async (cardTemplateId: string, groupByOptionId?: string) => {
-        const {activeView, board, groupByProperty} = props
-
-        const propertiesThatMeetFilters = CardFilter.propertiesThatMeetFilterGroup(activeView.fields.filter, board.cardProperties)
-        if ((activeView.fields.viewType === 'board' || activeView.fields.viewType === 'table') && groupByProperty) {
-            if (groupByOptionId) {
-                propertiesThatMeetFilters[groupByProperty.id] = groupByOptionId
-            } else {
-                delete propertiesThatMeetFilters[groupByProperty.id]
-            }
-        }
-
-        mutator.performAsUndoGroup(async () => {
-            const [, newCardId] = await mutator.duplicateCard(
-                cardTemplateId,
-                board.id,
-                true,
-                intl.formatMessage({id: 'Mutator.new-card-from-template', defaultMessage: 'new card from template'}),
-                false,
-                propertiesThatMeetFilters,
-                async (cardId) => {
-                    dispatch(updateView({...activeView, fields: {...activeView.fields, cardOrder: [...activeView.fields.cardOrder, cardId]}}))
-                    TelemetryClient.trackEvent(TelemetryCategory, TelemetryActions.CreateCardViaTemplate, {board: props.board.id, view: props.activeView.id, card: cardId, cardTemplateId})
-                    showCard(cardId)
-                },
-                async () => {
-                    showCard(undefined)
-                },
-            )
-            await mutator.changeViewCardOrder(props.board.id, activeView.id, activeView.fields.cardOrder, [...activeView.fields.cardOrder, newCardId], 'add-card')
-        })
-    }, [props.board, props.activeView, showCard])
 
     const addCardTemplate = useCallback(async () => {
         const {board, activeView} = props
