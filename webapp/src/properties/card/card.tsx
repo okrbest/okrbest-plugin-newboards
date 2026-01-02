@@ -14,6 +14,7 @@ import {getCurrentTeamId} from '../../store/teams'
 import IconButton from '../../widgets/buttons/iconButton'
 import EditIcon from '../../widgets/icons/edit'
 import CloseIcon from '../../widgets/icons/close'
+import SearchIcon from '../../widgets/icons/search'
 
 import {PropertyProps} from '../types'
 
@@ -87,6 +88,7 @@ const CardPropertyEditor = (props: PropertyProps) => {
     const [cards, setCards] = useState<Card[]>([])
     const [loading, setLoading] = useState(false)
     const [boardAccessError, setBoardAccessError] = useState(false)
+    const [searchQuery, setSearchQuery] = useState('')
     const isEditable = !props.readOnly && Boolean(board)
 
     const emptyDisplayValue = props.showEmptyPlaceholder
@@ -166,6 +168,7 @@ const CardPropertyEditor = (props: PropertyProps) => {
     useEffect(() => {
         if (open && linkedBoardId) {
             fetchCards()
+            setSearchQuery('') // 드롭다운 열 때 검색어 초기화
         }
     }, [open, linkedBoardId, fetchCards])
 
@@ -223,6 +226,18 @@ const CardPropertyEditor = (props: PropertyProps) => {
 
     // 이미 선택된 카드 ID 목록
     const selectedCardIds = new Set(selectedCards.map((c) => c.id))
+
+    // 검색 필터링된 카드 목록
+    const filteredCards = useMemo(() => {
+        if (!searchQuery.trim()) {
+            return cards
+        }
+        const query = searchQuery.toLowerCase().trim()
+        return cards.filter((c) => {
+            const title = c.title || ''
+            return title.toLowerCase().includes(query)
+        })
+    }, [cards, searchQuery])
 
     return (
         <div
@@ -302,6 +317,18 @@ const CardPropertyEditor = (props: PropertyProps) => {
                     <div className='CardProperty-header'>
                         {intl.formatMessage({id: 'CardProperty.selectCard', defaultMessage: 'Select a card'})}
                     </div>
+                    <div className='CardProperty-search'>
+                        <SearchIcon/>
+                        <input
+                            type='text'
+                            className='CardProperty-searchInput'
+                            placeholder={intl.formatMessage({id: 'CardProperty.searchCards', defaultMessage: 'Search cards...'})}
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            autoFocus
+                        />
+                    </div>
                     {loading ? (
                         <div className='CardProperty-loading'>
                             {intl.formatMessage({id: 'CardProperty.loading', defaultMessage: 'Loading...'})}
@@ -314,9 +341,13 @@ const CardPropertyEditor = (props: PropertyProps) => {
                         <div className='CardProperty-empty'>
                             {intl.formatMessage({id: 'CardProperty.noCards', defaultMessage: 'No cards available'})}
                         </div>
+                    ) : filteredCards.length === 0 ? (
+                        <div className='CardProperty-empty'>
+                            {intl.formatMessage({id: 'CardProperty.noCardsFound', defaultMessage: 'No cards found'})}
+                        </div>
                     ) : (
                         <div className='CardProperty-list'>
-                            {cards.map((c) => {
+                            {filteredCards.map((c) => {
                                 const isSelected = selectedCardIds.has(c.id)
                                 return (
                                     <div
