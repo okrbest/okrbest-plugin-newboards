@@ -14,7 +14,7 @@ import (
 
 // GetBlockSuiteDocByCardID retrieves a BlockSuite document by card_id.
 func (s *SQLStore) GetBlockSuiteDocByCardID(cardID string) (*model.BlockSuiteDoc, error) {
-	query := s.getQueryBuilder(nil).
+	query := s.getQueryBuilder(s.db).
 		Select(
 			"doc_id",
 			"card_id",
@@ -55,7 +55,7 @@ func (s *SQLStore) GetBlockSuiteDocByCardID(cardID string) (*model.BlockSuiteDoc
 
 // GetBlockSuiteDocInfoByCardID retrieves metadata (without snapshot) by card_id.
 func (s *SQLStore) GetBlockSuiteDocInfoByCardID(cardID string) (*model.BlockSuiteDocInfo, error) {
-	query := s.getQueryBuilder(nil).
+	query := s.getQueryBuilder(s.db).
 		Select(
 			"doc_id",
 			"card_id",
@@ -99,7 +99,7 @@ func (s *SQLStore) UpsertBlockSuiteDoc(doc *model.BlockSuiteDoc) error {
 	}
 
 	// Verify that the card exists
-	cardExistsQuery := s.getQueryBuilder(nil).
+	cardExistsQuery := s.getQueryBuilder(s.db).
 		Select("1").
 		From(s.tablePrefix + "blocks").
 		Where(sq.Eq{
@@ -122,7 +122,7 @@ func (s *SQLStore) UpsertBlockSuiteDoc(doc *model.BlockSuiteDoc) error {
 
 	// Build upsert query based on database type
 	var query sq.InsertBuilder
-	query = s.getQueryBuilder(nil).
+	query = s.getQueryBuilder(s.db).
 		Insert(s.tablePrefix + "blocksuite_docs").
 		Columns(
 			"doc_id",
@@ -188,7 +188,7 @@ func (s *SQLStore) UpsertBlockSuiteDoc(doc *model.BlockSuiteDoc) error {
 
 // DeleteBlockSuiteDocByCardID deletes a BlockSuite document by card_id.
 func (s *SQLStore) DeleteBlockSuiteDocByCardID(cardID string) error {
-	query := s.getQueryBuilder(nil).
+	query := s.getQueryBuilder(s.db).
 		Delete(s.tablePrefix + "blocksuite_docs").
 		Where(sq.Eq{"card_id": cardID})
 
