@@ -76,8 +76,12 @@ const PropertyMenu = (props: Props) => {
         try {
             // getBoards를 사용하여 사용자가 접근 가능한 모든 보드 가져오기
             const items = await octoClient.getBoards()
-            // 템플릿만 제외
-            const accessibleBoards = items.filter((b) => !b.isTemplate)
+            // 템플릿만 제외하고 이름순 정렬
+            const accessibleBoards = items.filter((b) => !b.isTemplate).sort((a, b) => {
+                const titleA = a.title || ''
+                const titleB = b.title || ''
+                return titleA.localeCompare(titleB)
+            })
             setBoards(accessibleBoards)
         } catch (error) {
             console.error('Failed to fetch boards:', error)

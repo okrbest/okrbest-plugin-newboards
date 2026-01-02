@@ -188,7 +188,40 @@ const CenterPanel = (props: Props) => {
                 delete propertiesThatMeetFilters[groupByProperty.id]
             }
         }
-        card.fields.properties = {...card.fields.properties, ...properties, ...propertiesThatMeetFilters}
+
+        // card 타입 속성의 경우, 다른 카드에서 보드 ID 참조하여 자동 설정
+        const cardProperties: Record<string, string> = {}
+        for (const propertyTemplate of board.cardProperties) {
+            if (propertyTemplate.type === 'card') {
+                // 이미 설정된 속성이 있으면 건너뛰기
+                if (propertiesThatMeetFilters[propertyTemplate.id] || properties[propertyTemplate.id]) {
+                    continue
+                }
+                // 다른 카드에서 보드 ID 찾기
+                for (const otherCard of props.cards) {
+                    const otherValue = otherCard.fields.properties[propertyTemplate.id]
+                    if (otherValue && typeof otherValue === 'string') {
+                        // "boardId|" 형식인 경우 boardId 추출
+                        if (otherValue.includes('|')) {
+                            const boardId = otherValue.split('|')[0]
+                            if (boardId) {
+                                cardProperties[propertyTemplate.id] = `${boardId}|`
+                                break
+                            }
+                        } else if (otherValue.includes(':')) {
+                            // 이전 형식 "boardId:" 지원
+                            const boardId = otherValue.split(':')[0]
+                            if (boardId) {
+                                cardProperties[propertyTemplate.id] = `${boardId}|`
+                                break
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        card.fields.properties = {...card.fields.properties, ...properties, ...propertiesThatMeetFilters, ...cardProperties}
         if (!card.fields.icon && UserSettings.prefillRandomIcons) {
             card.fields.icon = BlockIcons.shared.randomIcon()
         }
