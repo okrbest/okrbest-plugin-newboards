@@ -117,6 +117,18 @@ const CardPropertyEditor = (props: PropertyProps) => {
             }
             const blocks = await octoClient.getAllBlocks(linkedBoardId)
             const cardBlocks = blocks.filter((block: Block) => block.type === 'card') as Card[]
+            // 이름순 정렬 (빈 제목은 뒤로)
+            cardBlocks.sort((a, b) => {
+                const titleA = a.title || ''
+                const titleB = b.title || ''
+                
+                // 빈 제목은 항상 뒤로
+                if (!titleA && !titleB) return 0
+                if (!titleA) return 1
+                if (!titleB) return -1
+                
+                return titleA.localeCompare(titleB)
+            })
             setCards(cardBlocks)
         } catch (error) {
             console.error('Failed to fetch cards:', error)
