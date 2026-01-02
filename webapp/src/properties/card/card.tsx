@@ -213,17 +213,6 @@ const CardPropertyEditor = (props: PropertyProps) => {
         }
     }, [isEditable, hasSelectedCards, open])
 
-    // 보드가 선택되지 않은 경우 안내 메시지 표시
-    if (!linkedBoardId) {
-        return (
-            <div className={`CardProperty ${props.property.valueClassName(!isEditable)}`}>
-                <span className='CardProperty-placeholder'>
-                    {intl.formatMessage({id: 'CardProperty.selectBoardFirst', defaultMessage: 'Select a board first'})}
-                </span>
-            </div>
-        )
-    }
-
     // 이미 선택된 카드 ID 목록
     const selectedCardIds = new Set(selectedCards.map((c) => c.id))
 
@@ -238,6 +227,17 @@ const CardPropertyEditor = (props: PropertyProps) => {
             return title.toLowerCase().includes(query)
         })
     }, [cards, searchQuery])
+
+    // 보드가 선택되지 않은 경우 안내 메시지 표시
+    if (!linkedBoardId) {
+        return (
+            <div className={`CardProperty ${props.property.valueClassName(!isEditable)}`}>
+                <span className='CardProperty-placeholder'>
+                    {intl.formatMessage({id: 'CardProperty.selectBoardFirst', defaultMessage: 'Select a board first'})}
+                </span>
+            </div>
+        )
+    }
 
     return (
         <div

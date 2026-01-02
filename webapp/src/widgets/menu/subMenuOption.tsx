@@ -25,6 +25,7 @@ type SubMenuOptionProps = {
 function SubMenuOption(props: SubMenuOptionProps): JSX.Element {
     const [isOpen, setIsOpen] = useState(false)
     const isHovering = useContext(HoveringContext)
+    const ref = useRef<HTMLDivElement>(null)
 
     const openLeftClass = props.position === 'left' || props.position === 'left-bottom' ? ' open-left' : ''
 
@@ -86,8 +87,6 @@ function SubMenuOption(props: SubMenuOptionProps): JSX.Element {
             }
         }
     }, [isOpen, props.id])
-
-    const ref = useRef<HTMLDivElement>(null)
 
     const styleRef = useRef<CSSProperties>({})
 
