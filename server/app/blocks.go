@@ -293,6 +293,12 @@ func (a *App) DeleteBlockAndNotify(blockID string, modifiedBy string, disableNot
 		return err
 	}
 
+	// If this is a card, also delete its BlockSuite document
+	if block.Type == model.TypeCard {
+		// Ignore error if BlockSuite doc doesn't exist (not all cards have one)
+		_ = a.store.DeleteBlockSuiteDocByCardID(blockID)
+	}
+
 	a.blockChangeNotifier.Enqueue(func() error {
 		a.wsAdapter.BroadcastBlockDelete(board.TeamID, blockID, block.BoardID)
 		a.metrics.IncrementBlocksDeleted(1)
