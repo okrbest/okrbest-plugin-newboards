@@ -11,6 +11,7 @@ import {Board} from '../blocks/board'
 import octoClient from '../octoClient'
 import {useAppSelector} from '../store/hooks'
 import {getCurrentTeamId} from '../store/teams'
+import {getCurrentBoard} from '../store/boards'
 import SearchIcon from '../widgets/icons/search'
 import './propertyMenu.scss'
 
@@ -63,6 +64,7 @@ export const PropertyTypes = (props: TypesProps): JSX.Element => {
 const PropertyMenu = (props: Props) => {
     const intl = useIntl()
     const teamId = useAppSelector(getCurrentTeamId)
+    const currentBoard = useAppSelector(getCurrentBoard)
     const [boards, setBoards] = useState<Board[]>([])
     const [loadingBoards, setLoadingBoards] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
@@ -70,6 +72,9 @@ const PropertyMenu = (props: Props) => {
     let currentPropertyName = props.propertyName
 
     const isCardType = props.propertyType.type === 'card'
+    
+    // 현재 보드에서 propertyTemplate 찾기
+    const propertyTemplate = currentBoard?.cardProperties?.find((p) => p.id === props.propertyId)
 
     const fetchBoards = useCallback(async () => {
         if (!teamId || !isCardType) {
@@ -113,10 +118,16 @@ const PropertyMenu = (props: Props) => {
         id: 'PropertyMenu.MoveDown',
         defaultMessage: 'Move property down',
     })
-    const selectBoardText = intl.formatMessage({
-        id: 'PropertyMenu.SelectBoard',
-        defaultMessage: 'Select board',
-    })
+    // 선택된 보드 확인 (propertyTemplate.options[0].id에 보드 ID 저장)
+    const selectedBoardId = propertyTemplate?.options?.[0]?.id
+    const selectedBoard = selectedBoardId ? boards.find((b) => b.id === selectedBoardId) : null
+    
+    const selectBoardText = selectedBoard
+        ? selectedBoard.icon ? `${selectedBoard.icon} ${selectedBoard.title}` : selectedBoard.title
+        : intl.formatMessage({
+            id: 'PropertyMenu.SelectBoard',
+            defaultMessage: 'Select board',
+        })
 
     // 검색 필터링된 보드 목록
     const filteredBoards = useMemo(() => {

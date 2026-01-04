@@ -183,44 +183,12 @@ const CenterPanel = (props: Props) => {
             }
         }
 
-        // card 타입 속성의 경우, 다른 카드에서 보드 ID 참조하여 자동 설정
-        const cardProperties: Record<string, string> = {}
+        // card 타입 속성의 경우, 속성 템플릿의 options[0]에서 보드 ID 참조하여 자동 설정
         for (const propertyTemplate of board.cardProperties) {
-            if (propertyTemplate.type === 'card') {
-                // 이미 설정된 속성이 있으면 건너뛰기
-                if (propertiesThatMeetFilters[propertyTemplate.id]) {
-                    continue
-                }
-                // 다른 카드에서 보드 ID 찾기
-                let foundBoardId: string | null = null
-                for (const otherCard of props.cards) {
-                    const otherValue = otherCard.fields.properties[propertyTemplate.id]
-                    if (otherValue && typeof otherValue === 'string') {
-                        // "boardId|" 형식인 경우 boardId 추출
-                        if (otherValue.includes('|')) {
-                            const boardId = otherValue.split('|')[0]
-                            if (boardId) {
-                                foundBoardId = boardId
-                                break
-                            }
-                        } else if (otherValue.includes(':')) {
-                            // 이전 형식 "boardId:" 지원
-                            const boardId = otherValue.split(':')[0]
-                            if (boardId) {
-                                foundBoardId = boardId
-                                break
-                            }
-                        }
-                    }
-                }
-                if (foundBoardId) {
-                    cardProperties[propertyTemplate.id] = `${foundBoardId}|`
-                }
+            if (propertyTemplate.type === 'card' && propertyTemplate.options && propertyTemplate.options.length > 0 && propertyTemplate.options[0].id) {
+                propertiesThatMeetFilters[propertyTemplate.id] = `${propertyTemplate.options[0].id}|`
             }
         }
-
-        // cardProperties를 propertiesThatMeetFilters에 병합
-        Object.assign(propertiesThatMeetFilters, cardProperties)
 
         mutator.performAsUndoGroup(async () => {
             const [, newCardId] = await mutator.duplicateCard(
@@ -266,43 +234,14 @@ const CenterPanel = (props: Props) => {
             }
         }
 
-        // card 타입 속성의 경우, 다른 카드에서 보드 ID 참조하여 자동 설정
-        const cardProperties: Record<string, string> = {}
+        // card 타입 속성의 경우, 속성 템플릿의 options[0]에서 보드 ID 참조하여 자동 설정
         for (const propertyTemplate of board.cardProperties) {
-            if (propertyTemplate.type === 'card') {
-                // 이미 설정된 속성이 있으면 건너뛰기
-                if (propertiesThatMeetFilters[propertyTemplate.id] || properties[propertyTemplate.id]) {
-                    continue
-                }
-                // 다른 카드에서 보드 ID 찾기
-                let foundBoardId: string | null = null
-                for (const otherCard of props.cards) {
-                    const otherValue = otherCard.fields.properties[propertyTemplate.id]
-                    if (otherValue && typeof otherValue === 'string') {
-                        // "boardId|" 형식인 경우 boardId 추출
-                        if (otherValue.includes('|')) {
-                            const boardId = otherValue.split('|')[0]
-                            if (boardId) {
-                                foundBoardId = boardId
-                                break
-                            }
-                        } else if (otherValue.includes(':')) {
-                            // 이전 형식 "boardId:" 지원
-                            const boardId = otherValue.split(':')[0]
-                            if (boardId) {
-                                foundBoardId = boardId
-                                break
-                            }
-                        }
-                    }
-                }
-                if (foundBoardId) {
-                    cardProperties[propertyTemplate.id] = `${foundBoardId}|`
-                }
+            if (propertyTemplate.type === 'card' && propertyTemplate.options && propertyTemplate.options.length > 0 && propertyTemplate.options[0].id) {
+                propertiesThatMeetFilters[propertyTemplate.id] = `${propertyTemplate.options[0].id}|`
             }
         }
 
-        card.fields.properties = {...card.fields.properties, ...properties, ...propertiesThatMeetFilters, ...cardProperties}
+        card.fields.properties = {...card.fields.properties, ...properties, ...propertiesThatMeetFilters}
         if (!card.fields.icon && UserSettings.prefillRandomIcons) {
             card.fields.icon = BlockIcons.shared.randomIcon()
         }
