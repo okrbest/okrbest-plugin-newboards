@@ -207,14 +207,17 @@ const CardDetailProperties = (props: Props) => {
                                     onBoardSelected={(selectedBoard: Board) => {
                                         // 메뉴가 닫힌 후에 비동기 작업 실행
                                         setTimeout(async () => {
+                                            // 속성 템플릿에 기본 보드 ID 저장
+                                            const updatedBoard = await mutator.updatePropertyTemplateDefaultBoardId(board, propertyTemplate.id, selectedBoard.id)
+                                            
                                             // 보드가 변경되면 모든 카드의 해당 속성에 새 보드 ID만 저장 (카드 선택은 초기화)
                                             // 새로운 형식 사용: "boardId|" (빈 카드 목록)
                                             for (const c of cards) {
                                                 await mutator.changePropertyValue(board.id, c, propertyTemplate.id, `${selectedBoard.id}|`, 'set board id')
                                             }
-                                            // 속성 이름을 선택한 보드 이름으로 변경
+                                            // 속성 이름을 선택한 보드 이름으로 변경 (업데이트된 보드 사용)
                                             const cardPropertyType = propRegistry.get(propertyTemplate.type)
-                                            await mutator.changePropertyTypeAndName(board, cards, propertyTemplate, cardPropertyType.type, selectedBoard.title)
+                                            await mutator.changePropertyTypeAndName(updatedBoard, cards, propertyTemplate, cardPropertyType.type, selectedBoard.title)
                                         }, 0)
                                     }}
                                 />

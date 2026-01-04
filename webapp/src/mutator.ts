@@ -209,9 +209,11 @@ class Mutator {
         await undoManager.perform(
             async () => {
                 await octoClient.patchBoard(newBoard.id, updatePatch)
+                store.dispatch(updateBoards([newBoard]))
             },
             async () => {
                 await octoClient.patchBoard(oldBoard.id, undoPatch)
+                store.dispatch(updateBoards([oldBoard]))
             },
             description,
             this.undoGroupId,
@@ -524,6 +526,23 @@ class Mutator {
         await this.updateBoard(newBoard, board, 'reorder properties')
     }
 
+    async updatePropertyTemplateDefaultBoardId(board: Board, propertyTemplateId: string, defaultBoardId: string): Promise<Board> {
+        const oldBoard: Board = board
+        const newBoard = createBoard(board)
+        const template = newBoard.cardProperties.find((o: IPropertyTemplate) => o.id === propertyTemplateId)
+        if (!template || template.type !== 'card') {
+            return board
+        }
+        // card 타입 속성의 경우 options[0]에 보드 ID 저장
+        if (!template.options || template.options.length === 0) {
+            template.options = [{id: defaultBoardId, value: defaultBoardId, color: ''}]
+        } else {
+            template.options[0] = {id: defaultBoardId, value: defaultBoardId, color: ''}
+        }
+        await this.updateBoard(newBoard, oldBoard, 'update property template default board id')
+        return newBoard
+    }
+
     async deleteProperty(board: Board, views: BoardView[], cards: Card[], propertyId: string) {
         const newBoard = createBoard(board)
         newBoard.cardProperties = board.cardProperties.filter((o: IPropertyTemplate) => o.id !== propertyId)
@@ -659,6 +678,9 @@ class Mutator {
 
         if (propertyTemplate.type !== newType) {
             newTemplate.options = []
+        } else if (propertyTemplate.type === 'card' && propertyTemplate.options && propertyTemplate.options.length > 0) {
+            // card 타입이고 타입이 변경되지 않으면 options 보존 (보드 ID 저장용)
+            newTemplate.options = propertyTemplate.options.map((option) => ({...option}))
         }
 
         newTemplate.type = newType
