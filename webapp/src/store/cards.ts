@@ -24,6 +24,9 @@ import {getSearchText} from './searchText'
 
 import {RootState} from './index'
 
+// 빈 배열을 재사용하여 불필요한 리렌더링 방지
+const EMPTY_CARDS: Card[] = []
+
 type CardsState = {
     current: string
     limitTimestamp: number
@@ -378,7 +381,7 @@ export const getCurrentViewCardsSortedFilteredAndGroupedWithoutLimit = createSel
     getBoardUsers,
     (cards, lastCommentByCard, board, view, searchText, users) => {
         if (!view || !board || !users || !cards) {
-            return []
+            return EMPTY_CARDS
         }
         let result = cards.filter((c) => !c.limited)
         if (view.fields.filter) {
