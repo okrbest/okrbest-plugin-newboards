@@ -13,7 +13,7 @@ export default class CardProperty extends PropertyType {
     Editor = CardPropertyEditor
     name = 'Card'
     type = 'card' as PropertyTypeEnum
-    canGroup = false
+    canGroup = true
     canFilter = true
     filterValueType = 'text' as FilterValueType
 
