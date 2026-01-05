@@ -241,8 +241,8 @@ function sortCards(cards: Card[], lastCommentByCard: {[key: string]: CommentBloc
             const sortPropertyId = sortOption.propertyId
             const template = board.cardProperties.find((o) => o.id === sortPropertyId)
             if (!template) {
-                Utils.logError(`Missing template for property id: ${sortPropertyId}`)
-                return sortedCards
+                Utils.logError(`Missing template for property id: ${sortPropertyId}, skipping this sort option`)
+                continue
             }
             Utils.log(`Sort by property: ${template?.name}`)
             sortedCards = sortedCards.sort((a, b) => {
