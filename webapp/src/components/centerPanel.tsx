@@ -409,6 +409,25 @@ const CenterPanel = (props: Props) => {
         return intl.formatMessage({id: 'centerPanel.unknown-user', defaultMessage: 'Unknown user'})
     }
 
+    // MultiPerson 그룹의 사용자 이름 변환 (쉼표로 구분된 ID들을 이름으로 변환)
+    const getMultiPersonDisplayName = (boardGroup: BoardGroup) => {
+        const userIds = boardGroup.option.id.split(',').filter((id) => id)
+        if (userIds.length === 0) {
+            return intl.formatMessage({
+                id: 'centerPanel.undefined',
+                defaultMessage: 'No {propertyName}',
+            }, {propertyName: groupByProperty?.name})
+        }
+        const names = userIds.map((userId) => {
+            const user = boardUsers[userId]
+            if (user) {
+                return Utils.getUserDisplayName(user, clientConfig.teammateNameDisplay)
+            }
+            return intl.formatMessage({id: 'centerPanel.unknown-user', defaultMessage: 'Unknown user'})
+        })
+        return names.join(', ')
+    }
+
     const {visible: visibleGroups, hidden: hiddenGroups} = useMemo(() => {
         const {visible: vg, hidden: hg} = getVisibleAndHiddenGroups(cards, activeView.fields.visibleOptionIds, activeView.fields.hiddenOptionIds, groupByProperty)
         if (groupByProperty?.type === 'createdBy' || groupByProperty?.type === 'updatedBy' || groupByProperty?.type === 'person') {
@@ -418,6 +437,15 @@ const CenterPanel = (props: Props) => {
                 })
                 hg.forEach((value) => {
                     value.option.value = getUserDisplayName(value)
+                })
+            }
+        } else if (groupByProperty?.type === 'multiPerson') {
+            if (boardUsers) {
+                vg.forEach((value) => {
+                    value.option.value = getMultiPersonDisplayName(value)
+                })
+                hg.forEach((value) => {
+                    value.option.value = getMultiPersonDisplayName(value)
                 })
             }
         }
