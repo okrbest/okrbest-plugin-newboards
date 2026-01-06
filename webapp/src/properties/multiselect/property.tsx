@@ -16,6 +16,7 @@ export default class MultiSelectProperty extends PropertyType {
     name = 'MultiSelect'
     type = 'multiSelect' as PropertyTypeEnum
     canFilter = true
+    canGroup = true
     filterValueType = 'options' as FilterValueType
     displayName = (intl: IntlShape) => intl.formatMessage({id: 'PropertyType.MultiSelect', defaultMessage: 'Multi select'})
     displayValue = (propertyValue: string | string[] | undefined, card: Card, propertyTemplate: IPropertyTemplate) => {

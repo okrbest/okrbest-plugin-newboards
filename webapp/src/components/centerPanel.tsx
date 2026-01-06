@@ -184,8 +184,9 @@ const CenterPanel = (props: Props) => {
         }
 
         // card 타입 속성의 경우, 속성 템플릿의 options[0]에서 보드 ID 참조하여 자동 설정
+        // 이미 설정된 속성이 있으면 건너뛰기
         for (const propertyTemplate of board.cardProperties) {
-            if (propertyTemplate.type === 'card' && propertyTemplate.options && propertyTemplate.options.length > 0 && propertyTemplate.options[0].id) {
+            if (propertyTemplate.type === 'card' && !propertiesThatMeetFilters[propertyTemplate.id] && propertyTemplate.options && propertyTemplate.options.length > 0 && propertyTemplate.options[0].id) {
                 propertiesThatMeetFilters[propertyTemplate.id] = `${propertyTemplate.options[0].id}|`
             }
         }
@@ -207,16 +208,22 @@ const CenterPanel = (props: Props) => {
                     showCard(undefined)
                 },
             )
-            await mutator.changeViewCardOrder(props.board.id, activeView.id, activeView.fields.cardOrder, [...activeView.fields.cardOrder, newCardId], 'add-card')
+            if (newCardId) {
+                await mutator.changeViewCardOrder(props.board.id, activeView.id, activeView.fields.cardOrder, [...activeView.fields.cardOrder, newCardId], 'add-card')
+            }
         })
     }, [props.board, props.activeView, showCard, props.cards, intl, dispatch])
 
     const addCard = useCallback(async (groupByOptionId?: string, show = false, properties: Record<string, string> = {}): Promise<void> => {
         const {activeView, board, groupByProperty} = props
         
-        // 기본 템플릿이 설정되어 있으면 템플릿에서 카드 생성
+        // 기본 템플릿이 설정되어 있고 실제로 템플릿 카드가 존재하는지 확인
         if (activeView.fields.defaultTemplateId) {
-            return addCardFromTemplate(activeView.fields.defaultTemplateId, groupByOptionId)
+            const templateCard = props.cards.find((card) => card.id === activeView.fields.defaultTemplateId && card.fields.isTemplate)
+            if (templateCard) {
+                return addCardFromTemplate(activeView.fields.defaultTemplateId, groupByOptionId)
+            }
+            // 템플릿 카드가 없으면 빈 카드 생성 (defaultTemplateId는 그대로 두고 계속 진행)
         }
 
         const card = createCard()
@@ -235,8 +242,9 @@ const CenterPanel = (props: Props) => {
         }
 
         // card 타입 속성의 경우, 속성 템플릿의 options[0]에서 보드 ID 참조하여 자동 설정
+        // 이미 설정된 속성이 있으면 건너뛰기
         for (const propertyTemplate of board.cardProperties) {
-            if (propertyTemplate.type === 'card' && propertyTemplate.options && propertyTemplate.options.length > 0 && propertyTemplate.options[0].id) {
+            if (propertyTemplate.type === 'card' && !propertiesThatMeetFilters[propertyTemplate.id] && !properties[propertyTemplate.id] && propertyTemplate.options && propertyTemplate.options.length > 0 && propertyTemplate.options[0].id) {
                 propertiesThatMeetFilters[propertyTemplate.id] = `${propertyTemplate.options[0].id}|`
             }
         }
@@ -401,6 +409,25 @@ const CenterPanel = (props: Props) => {
         return intl.formatMessage({id: 'centerPanel.unknown-user', defaultMessage: 'Unknown user'})
     }
 
+    // MultiPerson 그룹의 사용자 이름 변환 (쉼표로 구분된 ID들을 이름으로 변환)
+    const getMultiPersonDisplayName = (boardGroup: BoardGroup) => {
+        const userIds = boardGroup.option.id.split(',').filter((id) => id)
+        if (userIds.length === 0) {
+            return intl.formatMessage({
+                id: 'centerPanel.undefined',
+                defaultMessage: 'No {propertyName}',
+            }, {propertyName: groupByProperty?.name})
+        }
+        const names = userIds.map((userId) => {
+            const user = boardUsers[userId]
+            if (user) {
+                return Utils.getUserDisplayName(user, clientConfig.teammateNameDisplay)
+            }
+            return intl.formatMessage({id: 'centerPanel.unknown-user', defaultMessage: 'Unknown user'})
+        })
+        return names.join(', ')
+    }
+
     const {visible: visibleGroups, hidden: hiddenGroups} = useMemo(() => {
         const {visible: vg, hidden: hg} = getVisibleAndHiddenGroups(cards, activeView.fields.visibleOptionIds, activeView.fields.hiddenOptionIds, groupByProperty)
         if (groupByProperty?.type === 'createdBy' || groupByProperty?.type === 'updatedBy' || groupByProperty?.type === 'person') {
@@ -410,6 +437,15 @@ const CenterPanel = (props: Props) => {
                 })
                 hg.forEach((value) => {
                     value.option.value = getUserDisplayName(value)
+                })
+            }
+        } else if (groupByProperty?.type === 'multiPerson') {
+            if (boardUsers) {
+                vg.forEach((value) => {
+                    value.option.value = getMultiPersonDisplayName(value)
+                })
+                hg.forEach((value) => {
+                    value.option.value = getMultiPersonDisplayName(value)
                 })
             }
         }
