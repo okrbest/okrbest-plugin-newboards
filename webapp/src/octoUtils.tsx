@@ -107,7 +107,7 @@ class OctoUtils {
     }
 
     static filterConditionDisplayString(filterCondition: FilterCondition, intl: IntlShape, filterValueType: string): string {
-        if (filterValueType === 'options' || filterValueType === 'person') {
+        if (filterValueType === 'options' || filterValueType === 'person' || filterValueType === 'card') {
             switch (filterCondition) {
             case 'includes': return intl.formatMessage({id: 'Filter.includes', defaultMessage: 'includes'})
             case 'notIncludes': return intl.formatMessage({id: 'Filter.not-includes', defaultMessage: 'doesn\'t include'})
@@ -200,6 +200,17 @@ class OctoUtils {
                 return currentFilterCondition
             default: {
                 return 'is'
+            }
+            }
+        } else if (filterValueType === 'card') {
+            switch (currentFilterCondition) {
+            case 'includes':
+            case 'notIncludes':
+            case 'isEmpty':
+            case 'isNotEmpty':
+                return currentFilterCondition
+            default: {
+                return 'includes'
             }
             }
         }
