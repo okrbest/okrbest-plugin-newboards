@@ -95,8 +95,11 @@ const CardPropertyEditor = (props: PropertyProps) => {
         ? intl.formatMessage({id: 'PropertyValueElement.empty', defaultMessage: 'Empty'})
         : ''
 
-    // propertyValue 파싱
-    const {boardId: linkedBoardId, selectedCards} = useMemo(
+    // 연결된 보드 ID는 속성 템플릿에서 가져옴
+    const linkedBoardId = propertyTemplate.options?.[0]?.id || ''
+
+    // propertyValue 파싱 (선택된 카드 정보만)
+    const {selectedCards} = useMemo(
         () => parsePropertyValue(propertyValue),
         [propertyValue],
     )
