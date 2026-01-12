@@ -15,7 +15,7 @@ export default class CardProperty extends PropertyType {
     type = 'card' as PropertyTypeEnum
     canGroup = true
     canFilter = true
-    filterValueType = 'text' as FilterValueType
+    filterValueType = 'card' as FilterValueType
 
     displayName = (intl: IntlShape) => intl.formatMessage({id: 'PropertyType.Card', defaultMessage: 'Card'})
 

@@ -29,6 +29,7 @@ globs: ["webapp/src/properties/**"]
 | updatedTime | `properties/updatedTime/` | 수정 시간 | 자동 계산 |
 | createdBy | `properties/createdBy/` | 생성자 | 자동 계산 |
 | updatedBy | `properties/updatedBy/` | 수정자 | 자동 계산 |
+| card | `properties/card/` | 카드 참조 | `string` (아래 형식 참조) |
 
 ## 프로퍼티 정의 (Board)
 
@@ -212,10 +213,111 @@ const dateValue = JSON.stringify({from: Date.now()})
 
 ---
 
+## 카드 속성 (Card Property)
+
+카드 속성은 다른 보드의 카드를 참조할 수 있는 특수한 속성입니다.
+
+### 값 형식
+
+```typescript
+// 새 형식 (다중 카드 지원)
+"boardId|cardId1:cardTitle1,cardId2:cardTitle2,..."
+
+// 이전 형식 (단일 카드, 하위 호환)
+"boardId:cardId:cardTitle"
+```
+
+### 예시
+
+```typescript
+// 단일 카드 참조
+"board123|card456:버그 수정"
+
+// 다중 카드 참조
+"board123|card456:버그 수정,card789:기능 추가"
+```
+
+### 주요 파일
+
+| 파일 | 설명 |
+|------|------|
+| `properties/card/property.tsx` | PropertyType 정의 |
+| `properties/card/card.tsx` | 에디터 컴포넌트 (카드 선택 UI) |
+| `properties/card/card.scss` | 스타일 |
+
+---
+
+## 프로퍼티 필터링
+
+### FilterValueType
+
+프로퍼티마다 필터링 방식이 다릅니다:
+
+| FilterValueType | 지원 조건 | 대상 프로퍼티 |
+|-----------------|----------|--------------|
+| `options` | includes, notIncludes, isEmpty, isNotEmpty | select, multiSelect |
+| `person` | includes, notIncludes, isEmpty, isNotEmpty | person, multiPerson, createdBy, updatedBy |
+| `text` | is, contains, notContains, startsWith, notStartsWith, endsWith, notEndsWith | text, url, email, phone |
+| `boolean` | isSet, isNotSet | checkbox |
+| `date` | is, isBefore, isAfter, isSet, isNotSet | date, createdTime, updatedTime |
+| `card` | includes, notIncludes, isEmpty, isNotEmpty | card |
+
+### 카드 속성 필터링
+
+카드 속성 필터링은 참조된 카드 목록에서 선택하는 방식입니다.
+
+#### 필터 조건
+
+| 조건 | 설명 |
+|------|------|
+| includes | 선택한 카드를 참조하는 카드만 표시 |
+| notIncludes | 선택한 카드를 참조하지 않는 카드만 표시 |
+| isEmpty | 카드가 참조되지 않은 카드만 표시 |
+| isNotEmpty | 카드가 하나라도 참조된 카드만 표시 |
+
+#### 필터링 로직
+
+1. **CardFilterValue 컴포넌트** (`viewHeader/cardFilterValue.tsx`):
+   - 현재 보드의 모든 카드에서 해당 속성에 참조된 카드들을 수집
+   - 드롭다운 메뉴로 카드 다중 선택 가능
+
+2. **CardFilter.isClauseMet** (`cardFilter.ts`):
+   - `extractCardIds()` 함수로 속성값에서 cardId 배열 추출
+   - cardId 배열과 필터 값을 비교하여 조건 충족 여부 판단
+
+```typescript
+// cardFilter.ts - 카드 ID 추출 함수
+function extractCardIds(propertyValue: string): string[] {
+    // "boardId|cardId1:title1,cardId2:title2,..." 형식에서 cardId 추출
+    if (propertyValue.includes('|')) {
+        const [, cardsStr] = propertyValue.split('|')
+        return cardsStr.split(',').map(cardStr => {
+            const colonIndex = cardStr.indexOf(':')
+            return colonIndex === -1 ? cardStr : cardStr.substring(0, colonIndex)
+        }).filter(id => id)
+    }
+    // 이전 형식: "boardId:cardId:title"
+    const parts = propertyValue.split(':')
+    return parts.length >= 2 ? [parts[1]] : []
+}
+```
+
+#### 관련 파일
+
+| 파일 | 설명 |
+|------|------|
+| `cardFilter.ts` | 필터링 로직 (extractCardIds, isClauseMet) |
+| `viewHeader/cardFilterValue.tsx` | 카드 선택 UI 컴포넌트 |
+| `viewHeader/filterEntry.tsx` | 필터 조건 선택 메뉴 |
+| `viewHeader/filterValue.tsx` | FilterValueType별 필터 값 컴포넌트 분기 |
+| `octoUtils.tsx` | 필터 조건 표시 문자열 및 유효성 검사 |
+
+---
+
 ## Q&A 목록
 
 > 개발 중 생긴 질문들이 `q-{주제}.mdc` 파일로 이 폴더에 추가됩니다.
 
 | 질문 | 파일 |
 |------|------|
-| (새 질문이 생기면 여기에 추가) | |
+| 카드 속성 필터링은 어떻게 구현되어 있나요? | `q-card-filtering.mdc` |
