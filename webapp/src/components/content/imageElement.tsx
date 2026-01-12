@@ -12,6 +12,8 @@ import ImageIcon from '../../widgets/icons/image'
 import {sendFlashMessage} from '../../components/flashMessages'
 
 import {FileInfo} from '../../blocks/block'
+import ImagePreviewModal from '../imagePreviewModal/imagePreviewModal'
+import RootPortal from '../rootPortal'
 
 import {contentRegistry} from './contentRegistry'
 import ArchivedFile from './archivedFile/archivedFile'
@@ -23,13 +25,19 @@ type Props = {
 const ImageElement = (props: Props): JSX.Element|null => {
     const [imageDataUrl, setImageDataUrl] = useState<string|null>(null)
     const [fileInfo, setFileInfo] = useState<FileInfo>({})
+    const [showPreview, setShowPreview] = useState(false)
 
     const {block} = props
+
+    useEffect(() => {
+        console.log('ImageElement MOUNTED', {blockId: block.id, fileId: props.block.fields.fileId})
+    }, [])
 
     useEffect(() => {
         if (!imageDataUrl) {
             const loadImage = async () => {
                 const fileURL = await octoClient.getFileAsDataUrl(block.boardId, props.block.fields.fileId)
+                console.log('ImageElement loaded', {fileURL})
                 setImageDataUrl(fileURL.url || '')
                 setFileInfo(fileURL)
             }
@@ -48,11 +56,32 @@ const ImageElement = (props: Props): JSX.Element|null => {
     }
 
     return (
-        <img
-            className='ImageElement'
-            src={imageDataUrl}
-            alt={block.title}
-        />
+        <>
+            <img
+                className='ImageElement'
+                src={imageDataUrl}
+                alt={block.title}
+                onClick={(e) => {
+                    console.log('Image clicked!', {showPreview, imageDataUrl})
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setShowPreview(true)
+                }}
+                style={{cursor: 'pointer'}}
+            />
+            {showPreview && (
+                <RootPortal>
+                    <ImagePreviewModal
+                        imageUrl={imageDataUrl}
+                        title={block.title}
+                        onClose={() => {
+                            console.log('Closing modal')
+                            setShowPreview(false)
+                        }}
+                    />
+                </RootPortal>
+            )}
+        </>
     )
 }
 

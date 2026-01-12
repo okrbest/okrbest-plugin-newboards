@@ -38,6 +38,13 @@
         }
     }
 
+    &.is--disabled,
+    &:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
     .Icon {
         height: 24px;
         width: 24px;
