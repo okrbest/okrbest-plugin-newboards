@@ -5,6 +5,8 @@ import React, {useRef, useEffect, useState} from 'react'
 
 import {BlockInputProps, ContentType} from '../types'
 import octoClient from '../../../../octoClient'
+import ImagePreviewModal from '../../../imagePreviewModal/imagePreviewModal'
+import RootPortal from '../../../rootPortal'
 
 import './image.scss'
 
@@ -23,12 +25,18 @@ const Image: ContentType<FileInfo> = {
     editable: false,
     Display: (props: BlockInputProps<FileInfo>) => {
         const [imageDataUrl, setImageDataUrl] = useState<string|null>(null)
+        const [showPreview, setShowPreview] = useState(false)
+
+        useEffect(() => {
+            console.log('BlocksEditor Image Display MOUNTED', {value: props.value})
+        }, [])
 
         useEffect(() => {
             if (!imageDataUrl) {
                 const loadImage = async () => {
                     if (props.value && props.value.file && typeof props.value.file === 'string') {
                         const fileURL = await octoClient.getFileAsDataUrl(props.currentBoardId || '', props.value.file)
+                        console.log('BlocksEditor Image loaded', {fileURL})
                         setImageDataUrl(fileURL.url || '')
                     }
                 }
@@ -38,11 +46,32 @@ const Image: ContentType<FileInfo> = {
 
         if (imageDataUrl) {
             return (
-                <img
-                    data-testid='image'
-                    className='ImageView'
-                    src={imageDataUrl}
-                />
+                <>
+                    <img
+                        data-testid='image'
+                        className='ImageView'
+                        src={imageDataUrl}
+                        onClick={(e) => {
+                            console.log('BlocksEditor Image clicked!', {showPreview, imageDataUrl})
+                            e.preventDefault()
+                            e.stopPropagation()
+                            setShowPreview(true)
+                        }}
+                        style={{cursor: 'pointer'}}
+                    />
+                    {showPreview && (
+                        <RootPortal>
+                            <ImagePreviewModal
+                                imageUrl={imageDataUrl}
+                                title='Image'
+                                onClose={() => {
+                                    console.log('BlocksEditor Closing modal')
+                                    setShowPreview(false)
+                                }}
+                            />
+                        </RootPortal>
+                    )}
+                </>
             )
         }
         return null
