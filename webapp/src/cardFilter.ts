@@ -133,7 +133,11 @@ class CardFilter {
             // 카드 타입인 경우 cardIds로 비교
             if (cardIds !== undefined) {
                 const ids = cardIds
-                return filter.values.some((cValue) => ids.includes(cValue))
+                // 필터 값이 "cardId:title" 형식일 수 있으므로 카드 ID만 추출해서 비교
+                return filter.values.some((cValue) => {
+                    const filterCardId = cValue.includes(':') ? cValue.substring(0, cValue.indexOf(':')) : cValue
+                    return ids.includes(filterCardId)
+                })
             }
             return (filter.values.find((cValue) => (Array.isArray(value) ? value.includes(cValue) : cValue === value)) !== undefined)
         }
@@ -144,7 +148,11 @@ class CardFilter {
             // 카드 타입인 경우 cardIds로 비교
             if (cardIds !== undefined) {
                 const ids = cardIds
-                return !filter.values.some((cValue) => ids.includes(cValue))
+                // 필터 값이 "cardId:title" 형식일 수 있으므로 카드 ID만 추출해서 비교
+                return !filter.values.some((cValue) => {
+                    const filterCardId = cValue.includes(':') ? cValue.substring(0, cValue.indexOf(':')) : cValue
+                    return ids.includes(filterCardId)
+                })
             }
             return (filter.values.find((cValue) => (Array.isArray(value) ? value.includes(cValue) : cValue === value)) === undefined)
         }
@@ -312,6 +320,10 @@ class CardFilter {
 
     static propertyThatMeetsFilterClause(filterClause: FilterClause, templates: readonly IPropertyTemplate[]): { id: string, value?: string } {
         const template = templates.find((o) => o.id === filterClause.propertyId)
+        // eslint-disable-next-line no-console
+        console.log(`[DEBUG propertyThatMeetsFilterClause] propertyId=${filterClause.propertyId}, template=${template?.name}, condition=${filterClause.condition}, values=${JSON.stringify(filterClause.values)}`)
+        // eslint-disable-next-line no-console
+        console.log(`[DEBUG propertyThatMeetsFilterClause] available templates:`, templates.map((t) => ({id: t.id, name: t.name, type: t.type})))
         if (!template) {
             Utils.assertFailure(`propertyThatMeetsFilterClause. Cannot find template: ${filterClause.propertyId}`)
             return {id: filterClause.propertyId}

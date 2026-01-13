@@ -233,9 +233,10 @@ function getCardGroups(cards: Card[], groupByProperty: IPropertyTemplate, hidden
         const propertyValue = card.fields.properties[groupByProperty.id] as string
         const linkedCards = parseAllCardPropertyValues(propertyValue)
 
-        // 카드 ID를 정렬하여 순서와 무관하게 동일한 조합이면 같은 그룹
-        const sortedCardIds = linkedCards.map((c) => c.cardId).sort()
-        const key = sortedCardIds.join(',')
+        // 카드 ID:제목 형식으로 정렬하여 동일한 조합이면 같은 그룹
+        // "cardId1:title1,cardId2:title2" 형식 (centerPanel에서 속성값 생성 시 그대로 사용)
+        const sortedCards = [...linkedCards].sort((a, b) => a.cardId.localeCompare(b.cardId))
+        const key = sortedCards.map((c) => `${c.cardId}:${c.cardTitle}`).join(',')
 
         if (!groups[key]) {
             groups[key] = {cards: [], linkedCards}
