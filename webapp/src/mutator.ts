@@ -820,12 +820,31 @@ class Mutator {
     }
 
     async changeViewGroupById(boardId: string, viewId: string, oldGroupById: string|undefined, groupById: string): Promise<void> {
+        const view = store.getState().views.views[viewId]
+        const oldVisibleOptionIds = view?.fields.visibleOptionIds || []
+        const oldHiddenOptionIds = view?.fields.hiddenOptionIds || []
+        const oldCollapsedOptionIds = view?.fields.collapsedOptionIds || []
+        const oldKanbanCalculations = view?.fields.kanbanCalculations || {}
+        const resetFields = {
+            groupById,
+            visibleOptionIds: [],
+            hiddenOptionIds: [],
+            collapsedOptionIds: [],
+            kanbanCalculations: {},
+        }
+
         await undoManager.perform(
             async () => {
-                await octoClient.patchBlock(boardId, viewId, {updatedFields: {groupById}})
+                await octoClient.patchBlock(boardId, viewId, {updatedFields: resetFields})
             },
             async () => {
-                await octoClient.patchBlock(boardId, viewId, {updatedFields: {groupById: oldGroupById}})
+                await octoClient.patchBlock(boardId, viewId, {updatedFields: {
+                    groupById: oldGroupById,
+                    visibleOptionIds: oldVisibleOptionIds,
+                    hiddenOptionIds: oldHiddenOptionIds,
+                    collapsedOptionIds: oldCollapsedOptionIds,
+                    kanbanCalculations: oldKanbanCalculations,
+                }})
             },
             'group by',
             this.undoGroupId,
