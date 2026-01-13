@@ -949,10 +949,25 @@ class Mutator {
             return
         }
 
-        const newView = createBoardView(view)
-        newView.fields.visibleOptionIds = newView.fields.visibleOptionIds.filter((o) => !columnOptionIds.includes(o))
-        newView.fields.hiddenOptionIds = [...newView.fields.hiddenOptionIds, ...columnOptionIds]
-        await this.updateBlock(boardId, newView, view, 'hide column')
+        const oldVisibleOptionIds = view.fields.visibleOptionIds
+        const oldHiddenOptionIds = view.fields.hiddenOptionIds
+        const newVisibleOptionIds = oldVisibleOptionIds.filter((o) => !columnOptionIds.includes(o))
+        const newHiddenOptionIds = [...oldHiddenOptionIds, ...columnOptionIds]
+
+        await undoManager.perform(
+            async () => {
+                await octoClient.patchBlock(boardId, view.id, {
+                    updatedFields: {visibleOptionIds: newVisibleOptionIds, hiddenOptionIds: newHiddenOptionIds},
+                })
+            },
+            async () => {
+                await octoClient.patchBlock(boardId, view.id, {
+                    updatedFields: {visibleOptionIds: oldVisibleOptionIds, hiddenOptionIds: oldHiddenOptionIds},
+                })
+            },
+            'hide column',
+            this.undoGroupId,
+        )
     }
 
     async hideViewColumn(boardId: string, view: BoardView, columnOptionId: string): Promise<void> {
@@ -964,13 +979,27 @@ class Mutator {
             return
         }
 
-        const newView = createBoardView(view)
-        newView.fields.hiddenOptionIds = newView.fields.hiddenOptionIds.filter((o) => !columnOptionIds.includes(o))
+        const oldVisibleOptionIds = view.fields.visibleOptionIds
+        const oldHiddenOptionIds = view.fields.hiddenOptionIds
+        const newHiddenOptionIds = oldHiddenOptionIds.filter((o) => !columnOptionIds.includes(o))
 
         // Put the columns at the end of the visible list
-        newView.fields.visibleOptionIds = newView.fields.visibleOptionIds.filter((o) => !columnOptionIds.includes(o))
-        newView.fields.visibleOptionIds = [...newView.fields.visibleOptionIds, ...columnOptionIds]
-        await this.updateBlock(boardId, newView, view, 'show column')
+        const newVisibleOptionIds = oldVisibleOptionIds.filter((o) => !columnOptionIds.includes(o)).concat(columnOptionIds)
+
+        await undoManager.perform(
+            async () => {
+                await octoClient.patchBlock(boardId, view.id, {
+                    updatedFields: {visibleOptionIds: newVisibleOptionIds, hiddenOptionIds: newHiddenOptionIds},
+                })
+            },
+            async () => {
+                await octoClient.patchBlock(boardId, view.id, {
+                    updatedFields: {visibleOptionIds: oldVisibleOptionIds, hiddenOptionIds: oldHiddenOptionIds},
+                })
+            },
+            'show column',
+            this.undoGroupId,
+        )
     }
 
     async unhideViewColumn(boardId: string, view: BoardView, columnOptionId: string): Promise<void> {
