@@ -18,6 +18,7 @@ import DateProperty from './date/property'
 import PersonProperty from './person/property'
 import MultiPersonProperty from './multiperson/property'
 import CheckboxProperty from './checkbox/property'
+import CardProperty from './card/property'
 import UnknownProperty from './unknown/property'
 
 import {PropertyType} from './types'
@@ -58,6 +59,7 @@ registry.register(new DateProperty())
 registry.register(new PersonProperty())
 registry.register(new MultiPersonProperty())
 registry.register(new CheckboxProperty())
+registry.register(new CardProperty())
 registry.register(new CreatedTimeProperty())
 registry.register(new CreatedByProperty())
 registry.register(new UpdatedTimeProperty())

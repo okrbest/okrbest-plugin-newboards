@@ -13,5 +13,6 @@ export default class MultiPersonProperty extends PropertyType {
     type = 'multiPerson' as PropertyTypeEnum
     displayName = (intl: IntlShape) => intl.formatMessage({id: 'PropertyType.MultiPerson', defaultMessage: 'Multi person'})
     canFilter = true
+    canGroup = true
     filterValueType = 'person' as FilterValueType
 }

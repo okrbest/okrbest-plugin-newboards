@@ -30,6 +30,8 @@
 		"cypress:open": "cypress open"
 	},
 	"dependencies": {
+		"@blocksuite/blocks": "^0.19.5",
+		"@blocksuite/presets": "^0.19.5",
 		"@draft-js-plugins/editor": "^4.1.2",
 		"@draft-js-plugins/emoji": "^4.6.0",
 		"@draft-js-plugins/mention": "^5.1.2",
@@ -65,7 +67,8 @@
 		"react-intl": "^5.20.0",
 		"react-redux": "7.2.4",
 		"react-router-dom": "5.3.4",
-		"react-select": "^5.2.2"
+		"react-select": "^5.2.2",
+		"yjs": "^13.6.28"
 	},
 	"jest": {
 		"moduleNameMapper": {

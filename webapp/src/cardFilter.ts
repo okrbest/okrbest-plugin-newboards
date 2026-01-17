@@ -13,6 +13,34 @@ import {Utils} from './utils'
 
 const halfDay = 12 * 60 * 60 * 1000
 
+// 카드 속성 값에서 cardId 배열 추출
+// 형식: "boardId|cardId1:title1,cardId2:title2,..." 또는 "boardId:cardId:title"
+function extractCardIds(propertyValue: string | string[] | undefined): string[] {
+    if (!propertyValue || typeof propertyValue !== 'string') {
+        return []
+    }
+
+    // 새 형식: "boardId|cardId1:cardTitle1,cardId2:cardTitle2,..."
+    if (propertyValue.includes('|')) {
+        const [, cardsStr] = propertyValue.split('|')
+        if (!cardsStr) {
+            return []
+        }
+        return cardsStr.split(',').map((cardStr) => {
+            const colonIndex = cardStr.indexOf(':')
+            return colonIndex === -1 ? cardStr : cardStr.substring(0, colonIndex)
+        }).filter((id) => id)
+    }
+
+    // 이전 형식: "boardId:cardId:cardTitle"
+    const parts = propertyValue.split(':')
+    if (parts.length >= 2) {
+        return [parts[1]]
+    }
+
+    return []
+}
+
 class CardFilter {
     static createDatePropertyFromString(initialValue: string): DateProperty {
         let dateProperty: DateProperty = {}
@@ -91,23 +119,47 @@ class CardFilter {
             }
         }
 
+        // 카드 타입인 경우 cardIds를 추출해서 비교
+        let cardIds: string[] | undefined
+        if (template?.type === 'card') {
+            cardIds = extractCardIds(value as string)
+        }
+
         switch (filter.condition) {
         case 'includes': {
             if (filter.values?.length < 1) {
                 break
             }		// No values = ignore clause (always met)
+            // 카드 타입인 경우 cardIds로 비교
+            if (cardIds !== undefined) {
+                const ids = cardIds
+                return filter.values.some((cValue) => ids.includes(cValue))
+            }
             return (filter.values.find((cValue) => (Array.isArray(value) ? value.includes(cValue) : cValue === value)) !== undefined)
         }
         case 'notIncludes': {
             if (filter.values?.length < 1) {
                 break
             }		// No values = ignore clause (always met)
+            // 카드 타입인 경우 cardIds로 비교
+            if (cardIds !== undefined) {
+                const ids = cardIds
+                return !filter.values.some((cValue) => ids.includes(cValue))
+            }
             return (filter.values.find((cValue) => (Array.isArray(value) ? value.includes(cValue) : cValue === value)) === undefined)
         }
         case 'isEmpty': {
+            // 카드 타입인 경우 cardIds 배열로 확인
+            if (cardIds !== undefined) {
+                return cardIds.length === 0
+            }
             return (value || '').length <= 0
         }
         case 'isNotEmpty': {
+            // 카드 타입인 경우 cardIds 배열로 확인
+            if (cardIds !== undefined) {
+                return cardIds.length > 0
+            }
             return (value || '').length > 0
         }
         case 'isSet': {

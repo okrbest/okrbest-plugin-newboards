@@ -18,6 +18,7 @@ import Editable from '../../widgets/editable'
 import MenuWrapper from '../../widgets/menuWrapper'
 
 import DateFilter from './dateFilter'
+import CardFilterValue from './cardFilterValue'
 
 import './filterValue.scss'
 import MultiPersonFilterValue from './multipersonFilterValue'
@@ -75,6 +76,23 @@ const filterValue = (props: Props): JSX.Element|null => {
             />
         )
     }
+
+    if (propertyType.filterValueType === 'card') {
+        if (filter.condition !== 'includes' && filter.condition !== 'notIncludes') {
+            return null
+        }
+        if (!template) {
+            return null
+        }
+        return (
+            <CardFilterValue
+                view={view}
+                filter={filter}
+                template={template}
+            />
+        )
+    }
+
     if (propertyType.filterValueType === 'date') {
         if (filter.condition === 'isSet' || filter.condition === 'isNotSet') {
             return null

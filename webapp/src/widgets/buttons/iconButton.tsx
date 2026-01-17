@@ -14,12 +14,14 @@ type Props = {
     size?: string
     inverted?: boolean
     onMouseDown?: (e: React.MouseEvent<HTMLButtonElement>) => void
+    disabled?: boolean
 }
 
 function IconButton(props: Props): JSX.Element {
     const classNames: Record<string, boolean> = {
         IconButton: true,
         'style--inverted': Boolean(props.inverted),
+        'is--disabled': Boolean(props.disabled),
     }
     classNames[`${props.className}`] = Boolean(props.className)
     classNames[`size--${props.size}`] = Boolean(props.size)
@@ -32,6 +34,7 @@ function IconButton(props: Props): JSX.Element {
             className={Utils.generateClassName(classNames)}
             title={props.title}
             aria-label={props.title}
+            disabled={props.disabled}
         >
             {props.icon}
         </button>

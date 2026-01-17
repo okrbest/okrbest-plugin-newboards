@@ -148,6 +148,46 @@ func (pd PropDef) GetValue(v interface{}, resolver PropValueResolver) (string, e
 			sb.WriteString(strings.ToUpper(opt.Value))
 		}
 		return sb.String(), nil
+
+	case "card":
+		// v is a string in format "boardId|cardId1:cardTitle1,cardId2:cardTitle2,..."
+		// or old format "boardId:cardId:cardTitle"
+		s, ok := v.(string)
+		if !ok {
+			return "", ErrInvalidPropertyValueType
+		}
+		if s == "" {
+			return "", nil
+		}
+		// 새 형식: "boardId|cardId1:cardTitle1,cardId2:cardTitle2,..."
+		if strings.Contains(s, "|") {
+			parts := strings.SplitN(s, "|", 2)
+			if len(parts) < 2 || parts[1] == "" {
+				return "", nil
+			}
+			cardsStr := parts[1]
+			cardParts := strings.Split(cardsStr, ",")
+			var titles []string
+			for _, cardStr := range cardParts {
+				colonIndex := strings.Index(cardStr, ":")
+				if colonIndex == -1 {
+					titles = append(titles, "Untitled")
+				} else {
+					title := cardStr[colonIndex+1:]
+					if title == "" {
+						title = "Untitled"
+					}
+					titles = append(titles, title)
+				}
+			}
+			return strings.Join(titles, ", "), nil
+		}
+		// 이전 형식 호환: "boardId:cardId:cardTitle"
+		parts := strings.Split(s, ":")
+		if len(parts) >= 3 {
+			return strings.Join(parts[2:], ":"), nil
+		}
+		return "", nil
 	}
 	return fmt.Sprintf("%v", v), nil
 }
